@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      -webkit-app-region: no-drag; /* 确保可点击 */
+    }
+    .menu {
+      width: 150px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 6px;
+      padding: 5px 0;
+      font-family: sans-serif;
+      user-select: none;
+      border: 1px solid #ccc;
+    }
+    .item {
+      padding: 0px 8px;
+      cursor: pointer;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .item:hover {
+      background: #f0f0f0;
+    }
+    .danger {
+      color: #f56c6c;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu" id="menuContainer"></div>
+  <script>
+    const { ipcRenderer } = require('electron')
+    window.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('menuContainer')
+      ipcRenderer.removeAllListeners('set-menu-items')
+      ipcRenderer.on('set-menu-items', (e, items) => {
+        container.innerHTML = ''
+        if (!Array.isArray(items)) return
+        items.forEach(item => {
+          if (!item.name) return
+          const div = document.createElement('div')
+          div.className = 'item' + (item.danger ? ' danger' : '')
+          div.innerText = item.name
+          div.onclick = () => {
+            ipcRenderer.send('menu-command', item.key)
+            window.close()
+          }
+          container.appendChild(div)
+        })
+      })
+    })
+    // 额外防护：失焦后关闭
+    window.addEventListener('blur', () => window.close())
+  </script>
+</body>
+</html>
