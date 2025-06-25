@@ -6,7 +6,8 @@
          v-show="url"
          :src="url"
          :style="avatarImageStyle"
-         loading="lazy" />
+         loading="lazy"
+         @error="onImageError" />
     <div class="avatar-text"
          v-show="!url"
          :style="avatarTextStyle">
@@ -19,6 +20,8 @@
 </template>
 
 <script>
+import defaultAvatar from '../../assets/image/default-avatar.png'
+
 export default {
   name: "headImage",
   data () {
@@ -76,6 +79,9 @@ export default {
           this.$eventBus.$emit("openUserInfo", user, pos);
         })
       }
+    },
+    onImageError (e) {
+      e.target.src = defaultAvatar
     }
   },
   computed: {

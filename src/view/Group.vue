@@ -121,6 +121,7 @@ import GroupMemberSelector from '../components/group/GroupMemberSelector.vue';
 import HeadImage from '../components/common/HeadImage.vue';
 import ChatSelector from '../components/chat/ChatSelector.vue';
 import { pinyin } from 'pinyin-pro';
+import useGroupMemberStore from '../store/groupMemberStore.js'
 
 export default {
   name: "group",
@@ -132,6 +133,9 @@ export default {
     GroupMemberSelector,
     HeadImage,
     ChatSelector
+  },
+  created() {
+    this.groupMemberStore = useGroupMemberStore();
   },
   data() {
     return {
@@ -369,12 +373,18 @@ export default {
       })
     },
     loadGroupMembers() {
-      this.$http({
-        url: `/group/members/${this.activeGroup.id}`,
-        method: "get"
-      }).then((members) => {
-        this.groupMembers = members;
-      })
+      let cache = this.groupMemberStore.getMembers(this.activeGroup.id)
+      if (cache.length) {
+        this.groupMembers = cache
+      } else {
+        this.$http({
+          url: `/group/members/${this.activeGroup.id}`,
+          method: "get"
+        }).then((members) => {
+          this.groupMembers = members
+          this.groupMemberStore.setMembers(this.activeGroup.id, members)
+        })
+      }
     },
     reset() {
       this.activeGroup = {};

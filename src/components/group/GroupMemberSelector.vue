@@ -35,19 +35,23 @@
 
 <script>
 import GroupMemberBar from './GroupMemberBar.vue';
+import useGroupMemberStore from '../../store/groupMemberStore.js'
 import GroupMemberCard from './GroupMemberCard.vue';
 import VirtualScroller from '../common/VirtualScroller.vue';
 
 export default {
 	name: "addGroupMember",
-	components: {
-		GroupMemberBar,
-		GroupMemberCard,
-		VirtualScroller
-	},
-	data() {
-		return {
-			isShow: false,
+  components: {
+    GroupMemberBar,
+    GroupMemberCard,
+    VirtualScroller
+  },
+  created() {
+    this.groupMemberStore = useGroupMemberStore();
+  },
+  data() {
+    return {
+      isShow: false,
 			searchText: "",
 			maxSize: -1,
 			members: []
@@ -68,20 +72,28 @@ export default {
 			this.isShow = true;
 			this.loadGroupMembers(checkedIds, lockedIds, hideIds);
 		},
-		loadGroupMembers(checkedIds, lockedIds, hideIds) {
-			this.$http({
-				url: `/group/members/${this.group.id}`,
-				method: 'get'
-			}).then((members) => {
-				members.forEach((m) => {
-					// 默认选择和锁定的用户
-					m.checked = checkedIds.indexOf(m.userId) >= 0;
-					m.locked = lockedIds.indexOf(m.userId) >= 0;
-					m.hide = hideIds.indexOf(m.userId) >= 0;
-				});
-				this.members = members;
-			});
-		},
+                loadGroupMembers(checkedIds, lockedIds, hideIds) {
+                        let cache = this.groupMemberStore.getMembers(this.group.id);
+                        let handler = (members) => {
+                                members.forEach((m) => {
+                                        m.checked = checkedIds.indexOf(m.userId) >= 0;
+                                        m.locked = lockedIds.indexOf(m.userId) >= 0;
+                                        m.hide = hideIds.indexOf(m.userId) >= 0;
+                                });
+                                this.members = members;
+                        };
+                        if (cache.length) {
+                                handler(cache);
+                        } else {
+                                this.$http({
+                                        url: `/group/members/${this.group.id}`,
+                                        method: 'get'
+                                }).then((members) => {
+                                        this.groupMemberStore.setMembers(this.group.id, members);
+                                        handler(members);
+                                });
+                        }
+                },
 		onClickMember(m) {
 			if (!m.locked) {
 				m.checked = !m.checked;
