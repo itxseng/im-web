@@ -293,6 +293,7 @@ import ComplaintBox from '@/components/common/ComplaintBox.vue';
 import ChatFile from "./ChatFile.vue";
 import ChatImg from "./ChatImg.vue";
 import ChatVideo from "./ChatVideo.vue";
+import useGroupMemberStore from "../../store/groupMemberStore.js";
 export default {
   name: "chatPrivate",
   components: {
@@ -354,6 +355,9 @@ export default {
       deleteAllCheck: false,
       deleteAllObj: {}
     }
+  },
+  created () {
+    this.groupMemberStore = useGroupMemberStore();
   },
   methods: {
     cleared () {
@@ -1093,12 +1097,20 @@ export default {
         this.groupInfo = group
         this.chatStore.updateChatFromGroup(group);
         this.groupStore.updateGroup(group);
-      });
-      this.$http({
-        url: `/group/members/${groupId}`,
-        method: 'get'
-      }).then((groupMembers) => {
-        this.groupMembers = groupMembers;
+
+        // 先尝试从缓存中获取成员列表
+        let cache = this.groupMemberStore.getMembers(groupId);
+        if (cache.length && cache.length === group.membersCount) {
+          this.groupMembers = cache;
+        } else {
+          this.$http({
+            url: `/group/members/${groupId}`,
+            method: 'get'
+          }).then((groupMembers) => {
+            this.groupMembers = groupMembers;
+            this.groupMemberStore.setMembers(groupId, groupMembers);
+          });
+        }
       });
     },
     updateFriendInfo () {
