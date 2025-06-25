@@ -1099,17 +1099,17 @@ export default {
         this.groupStore.updateGroup(group);
 
         // 先尝试从缓存中获取成员列表
-        let cache = this.groupMemberStore.getMembers(groupId);
+        let cache = this.groupMemberStore.getMembers(groupId)
         if (cache.length && cache.length === group.membersCount) {
-          this.groupMembers = cache;
+          this.groupMembers = cache
         } else {
           this.$http({
             url: `/group/members/${groupId}`,
             method: 'get'
           }).then((groupMembers) => {
-            this.groupMembers = groupMembers;
-            this.groupMemberStore.setMembers(groupId, groupMembers);
-          });
+            this.groupMembers = groupMembers
+            this.groupMemberStore.setMembers(groupId, groupMembers)
+          })
         }
       });
     },

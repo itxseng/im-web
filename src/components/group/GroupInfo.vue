@@ -29,17 +29,21 @@
 
 <script>
 import HeadImage from '../common/HeadImage.vue';
+import useGroupMemberStore from '../../store/groupMemberStore.js'
 
 export default {
-	name: "GroupInfo",
-	components: {
-		HeadImage
-	},
-	data() {
-		return {
-			show: false,
-			group: {},
-			groupMembers: [],
+        name: "GroupInfo",
+        components: {
+                HeadImage
+        },
+        created() {
+                this.groupMemberStore = useGroupMemberStore();
+        },
+        data() {
+                return {
+                        show: false,
+                        group: {},
+                        groupMembers: [],
 			pos: {
 				x: 0,
 				y: 0
@@ -88,15 +92,21 @@ export default {
 				this.$eventBus.$emit("openFullImage", this.group.headImage);
 			}
 		},
-		loadGroupMembers() {
-			this.$http({
-				url: `/group/members/${this.group.id}`,
-				method: "get"
-			}).then((members) => {
-				this.groupMembers = members;
-			})
-		}
-	},
+                loadGroupMembers() {
+                        let cache = this.groupMemberStore.getMembers(this.group.id);
+                        if (cache.length) {
+                                this.groupMembers = cache;
+                        } else {
+                                this.$http({
+                                        url: `/group/members/${this.group.id}`,
+                                        method: "get"
+                                }).then((members) => {
+                                        this.groupMembers = members;
+                                        this.groupMemberStore.setMembers(this.group.id, members);
+                                })
+                        }
+                }
+        },
 	computed: {
 		isInGroup() {
 			return this.groupStore.isGroup(this.group.id);
