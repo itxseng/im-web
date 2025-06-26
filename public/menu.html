@@ -10,13 +10,15 @@
       -webkit-app-region: no-drag; /* 确保可点击 */
     }
     .menu {
-      width: 150px;
+      display: inline-block;
+      min-width: 150px;
       background: rgba(255,255,255,0.95);
       border-radius: 6px;
       padding: 5px 0;
       font-family: sans-serif;
       user-select: none;
       border: 1px solid #ccc;
+      box-sizing: border-box; /* 让计算包含边框和内边距，避免出现滚动条 */
     }
     .item {
       padding: 0px 8px;
@@ -56,6 +58,12 @@
           }
           container.appendChild(div)
         })
+        // 将实际内容尺寸告知主进程，便于窗口适配
+        const size = {
+          width: container.offsetWidth,
+          height: container.offsetHeight
+        }
+        ipcRenderer.send('menu-size', size)
       })
     })
     // 额外防护：失焦后关闭

@@ -53,7 +53,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return fs.existsSync(filePath);
   },
   showFloatingMenu: (options) => ipcRenderer.send('show-floating-menu', options),
-  onMenuCommand: (callback) => ipcRenderer.on('menu-command', (e, cmd) => callback(cmd))
+  onMenuCommand: (callback) => {
+    const handler = (e, cmd) => callback(cmd)
+    ipcRenderer.on('menu-command', handler)
+    return () => ipcRenderer.removeListener('menu-command', handler)
+  }
 });
 
 // 简易存储接口，使用同步 ipc 调用主进程持久化数据

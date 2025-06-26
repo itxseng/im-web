@@ -251,6 +251,16 @@ ipcMain.on('show-floating-menu', (event, { x, y, items }) => {
   })
 })
 
+// 接收渲染进程发送的菜单尺寸，动态调整窗口大小
+ipcMain.on('menu-size', (event, { width: w, height: h }) => {
+  if (menuWindow && !menuWindow.isDestroyed()) {
+    const [x, y] = menuWindow.getPosition()
+    const width = Math.ceil(w)
+    const height = Math.ceil(h)
+    menuWindow.setBounds({ x, y, width, height })
+  }
+})
+
 // 子窗口点击后发回 'menu-command'，转发给主窗口
 ipcMain.on('menu-command', (event, command) => {
   if (mainWindow && !mainWindow.isDestroyed()) {

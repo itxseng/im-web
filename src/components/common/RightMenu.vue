@@ -111,12 +111,16 @@ export default {
   },
   mounted () {
     // 监听子窗口选择命令并转发出来
-    window.electronAPI.onMenuCommand((cmd) => {
+    this._removeMenuCommand = window.electronAPI.onMenuCommand((cmd) => {
       const selected = this.items.find(i => i.key === cmd)
       if (selected) {
         this.$emit('select', selected)
       }
     })
+  },
+  beforeDestroy () {
+    // 销毁组件时移除监听，避免重复触发
+    this._removeMenuCommand && this._removeMenuCommand()
   }
 }
 </script>
