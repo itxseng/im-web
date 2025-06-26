@@ -2,7 +2,7 @@ import { MESSAGE_TYPE, MESSAGE_STATUS } from "../api/enums.js"
 import { defineStore } from 'pinia';
 import useUserStore from './userStore.js';
 import friendStore from './friendStore.js';
-import localForage from 'localforage';
+import localForage from '../utils/electronForage.js';
 import http from '../api/httpRequest.js'
 
 /**
