@@ -24,143 +24,86 @@
 
 <script>
 export default {
+  props: {
+    msgInfo: { type: Object, default: () => ({}) },
+    chat: { type: Object, default: () => ({}) }
+  },
   data () {
     return {
       progress: 0,
       progressVisible: false,
       progressStatus: 'success',
-      fileCheckInterval: null,
-      removeProgressListener: null,
-      removeDoneListener: null,
-      removeErrorListener: null
+      removeProgress: null,
+      removeDone: null,
+      removeError: null
     };
   },
-  props: {
-    msgInfo: {
-      type: Object,
-      default: () => ({})
-    },
-    chat: {
-      type: Object,
-      default: () => ({})
-    }
+  computed: {
+    contentData () { return JSON.parse(this.msgInfo.content) },
+    isChat () { return this.chat },
+    isMegInfo () { return this.msgInfo }
   },
   mounted () {
-    this.checkDownloaded();
-    this.startFileCheckTimer()
-
-    // 防止重复注册监听
-    this.removeProgressListener = window.electronAPI.onDownloadProgress(({ filename, percent }) => {
-      if (filename === this.contentData.name) {
-        this.progress = percent;
-      }
-    });
-
-    this.removeDoneListener = window.electronAPI.onDownloadDone(({ filename, filePath }) => {
-      console.log('download done', filename, filePath);
-
-      if (filename === this.contentData.name) {
-        this.progress = 100;
-        this.progressVisible = false;
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
-        console.log('下载完成：', filePath);
-      }
-    });
-
-    this.removeErrorListener = window.electronAPI?.onDownloadError?.((errMsg) => {
-      this.progressStatus = 'exception';
-      this.progressVisible = false;
-      console.error('下载失败：', errMsg);
-    });
+    this.checkLocalFile();
+    this.registerListeners();
   },
   beforeDestroy () {
-    if (this.fileCheckInterval) {
-      clearInterval(this.fileCheckInterval);
-    }
-    this.removeProgressListener && this.removeProgressListener();
-    this.removeDoneListener && this.removeDoneListener();
-    this.removeErrorListener && this.removeErrorListener();
+    this.cleanup();
   },
   methods: {
-    validStatus (status) {
-      console.log('validStatus:', status);
-
-      const valid = ['success', 'exception', 'warning'];
-      return valid.includes(status) ? status : 'success';
-    },
-    checkDownloaded () {
-      this.progressVisible = false;
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false)
-      if (this.contentData.localPath) {
-        this.progressVisible = false;
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
-      } else {
-        const filename = this.contentData?.name;
-        if (!filename) return;
-        const exists = window.electronAPI.checkFileExists(filename);
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
-      }
-    },
-    startFileCheckTimer () {
-      const filename = this.contentData?.name;
-      if (!filename || this.contentData?.localPath) return;
-
-      // 先清一次
-      if (this.fileCheckInterval) {
-        clearInterval(this.fileCheckInterval);
-      }
-
-      // 每2秒检查一次
-      this.fileCheckInterval = setInterval(() => {
-        const exists = window.electronAPI.checkFileExists(filename);
-        // console.log('check file exists', exists);
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, exists)
-        // 如果文件已存在了，停止监听
-        if (exists) {
-          clearInterval(this.fileCheckInterval);
-          this.fileCheckInterval = null;
+    registerListeners () {
+      this.removeProgress = window.electronAPI.onDownloadProgress(({ filename, percent }) => {
+        if (filename === this.contentData.name) {
+          this.progress = percent;
         }
-      }, 2000);
+      });
+      this.removeDone = window.electronAPI.onDownloadDone(({ filename, filePath }) => {
+        if (filename === this.contentData.name) {
+          this.progress = 100;
+          this.progressVisible = false;
+          this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
+          console.log('下载完成：', filePath);
+        }
+      });
+      this.removeError = window.electronAPI.onDownloadError((errMsg) => {
+        this.progressStatus = 'exception';
+        this.progressVisible = false;
+        console.error('下载失败：', errMsg);
+      });
+    },
+    cleanup () {
+      this.removeProgress && this.removeProgress();
+      this.removeDone && this.removeDone();
+      this.removeError && this.removeError();
+    },
+    checkLocalFile () {
+      const filename = this.contentData?.name;
+      if (!filename) return;
+      const exists = window.electronAPI.checkFileExists(filename);
+      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
     },
     downloadFile () {
       const filename = this.contentData?.name;
       const downloadUrl = this.contentData?.url?.originUrl;
-
       if (!filename || !downloadUrl) {
         console.warn('缺少文件名或下载地址');
         return;
       }
-
       this.progress = 0;
       this.progressVisible = true;
       this.progressStatus = 'success';
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false)
-      window.electronAPI?.downloadFile?.({
-        url: downloadUrl,
-        filename: filename
-      });
+      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
+      window.electronAPI.downloadFile({ url: downloadUrl, filename });
     },
     openFile () {
       if (this.contentData.localPath) {
-        const filePath = this.contentData.localPath;
-        window.electronAPI.showInLocalFolder(filePath);
+        window.electronAPI.showInLocalFolder(this.contentData.localPath);
       } else {
         const filename = this.contentData?.name;
         if (!filename) return;
         window.electronAPI.showInFolderByName(filename);
       }
     }
-  },
-  computed: {
-    contentData () {
-      return JSON.parse(this.isMegInfo.content)
-    },
-    isChat () {
-      return this.chat
-    },
-    isMegInfo () {
-      return this.msgInfo
-    },
   }
 };
 </script>
