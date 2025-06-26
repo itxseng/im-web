@@ -10,9 +10,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 import fs from 'fs'
 import os from 'os'
-import { get as httpGet } from 'http';
-import { get as httpsGet } from 'https';
-import { parse as parseUrl } from 'url';
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -94,49 +91,48 @@ async function createWindow () {
     }
   })
 
-  // ✅ 添加文件下载监听器
+  // ✅ 文件下载监听器，使用 Electron 的 session.downloadURL 获取进度
   ipcMain.on('download-file', (event, { url, filename }) => {
-    const parsedUrl = parseUrl(url);
-    const protocol = parsedUrl.protocol;
+    if (!mainWindow) return;
 
-    const get = protocol === 'http:' ? httpGet : httpsGet;
-    // 创建下载目录
     const downloadDir = path.join(os.homedir(), 'Downloads', 'Hezi');
-    // 创建文件
-    const destPath = path.join(downloadDir, filename);
-    // 如果文件夹不存在，则创建
     if (!fs.existsSync(downloadDir)) {
       fs.mkdirSync(downloadDir, { recursive: true });
     }
 
-    const file = fs.createWriteStream(destPath);
-    let receivedBytes = 0;
+    const { session } = mainWindow.webContents;
+    const handleWillDownload = (e, item) => {
+      const finalName = filename || item.getFilename();
+      const destPath = path.join(downloadDir, finalName);
+      item.setSavePath(destPath);
 
-    get(url, (response) => {
-      const totalBytes = parseInt(response.headers['content-length'], 10);
-
-      response.pipe(file);
-
-      response.on('data', (chunk) => {
-        receivedBytes += chunk.length;
-        const percent = Math.round((receivedBytes / totalBytes) * 100);
-        mainWindow.webContents.send('download-progress', {
-          filename,
-          percent
-        });
+      item.on('updated', (e, state) => {
+        if (state === 'progressing') {
+          const total = item.getTotalBytes();
+          const received = item.getReceivedBytes();
+          const percent = total > 0 ? Math.round((received / total) * 100) : 0;
+          mainWindow.webContents.send('download-progress', {
+            filename: finalName,
+            percent
+          });
+        }
       });
-      file.on('finish', () => {
-        file.close();
-        mainWindow.webContents.send('download-done', {
-          filename,
-          filePath: destPath
-        });
+
+      item.once('done', (e, state) => {
+        session.removeListener('will-download', handleWillDownload);
+        if (state === 'completed') {
+          mainWindow.webContents.send('download-done', {
+            filename: finalName,
+            filePath: destPath
+          });
+        } else {
+          mainWindow.webContents.send('download-error', `Download failed: ${state}`);
+        }
       });
-    }).on('error', (err) => {
-      fs.unlink(destPath, () => { });
-      console.error('下载失败:', err);
-      mainWindow.webContents.send('download-error', err.message);
-    });
+    };
+
+    session.once('will-download', handleWillDownload);
+    mainWindow.webContents.downloadURL(url);
   });
   // 根据文件路径打开文件地址
   ipcMain.on('show-in-folder', (event, filePath) => {
