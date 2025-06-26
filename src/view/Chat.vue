@@ -48,9 +48,9 @@
                      :index="index"
                      @click.native="onActiveItem(chat,index)"
                      @delete="onDelItem(index)"
-                     @top="onTop(index)"
+                     @top="onTop(chat)"
                      @info="onShowInfo(chat)"
-                     @unpinfromtop="unpinFromTop(index)"
+                     @unpinfromtop="unpinFromTop(chat)"
                      @heimingdan="blacklist"
                      @chakangerenxinxi="showFriendInfo"
                      :active="chat === chatStore.activeChat"></chat-item>
@@ -136,8 +136,9 @@ export default {
     onDelItem (index) {
       this.chatStore.removeChat(index);
     },
-    onTop (chatIdx) {
-      this.chatStore.moveTop(chatIdx);
+    onTop (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.moveTop(idx)
     },
     onShowInfo (chat) {
       if (chat.type == 'PRIVATE') {
@@ -150,8 +151,9 @@ export default {
         this.$router.push("/home/group?id=" + chat.targetId);
       }
     },
-    unpinFromTop (chatIdx) {
-      this.chatStore.unpinFromTop(chatIdx)
+    unpinFromTop (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.unpinFromTop(idx)
     },
     // 添加黑名单
     blacklist (item) {
