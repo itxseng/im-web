@@ -4,15 +4,15 @@
     <!-- 未下载：显示下载图标 -->
     <i class="el-icon-bottom"
        @click="downloadFile"
-       v-if="progressVisible === false && this.isMegInfo.isDownload === false"></i>
+       v-if="!progressVisible && !this.isMegInfo.isDownload"></i>
     <!-- 已下载：点击打开文件夹 -->
     <div class="file-icon"
-         v-else-if="progressVisible === false && this.isMegInfo.isDownload"
+         v-else-if="!progressVisible && this.isMegInfo.isDownload"
          @click="openFile">
       <span class="el-icon-document"></span>
     </div>
     <!-- 正在下载：显示进度圈 -->
-    <div v-else
+    <div v-else-if="progressVisible"
          class="download-file-progress">
       <el-progress type="circle"
                    :percentage="progress"
@@ -77,9 +77,13 @@ export default {
       this.removeError && this.removeError();
     },
     checkLocalFile () {
-      const filename = this.contentData?.name;
-      if (!filename) return;
-      const exists = window.electronAPI.checkFileExists(filename);
+      const { name, localPath } = this.contentData || {};
+      if (localPath) {
+        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
+        return;
+      }
+      if (!name) return;
+      const exists = window.electronAPI.checkFileExists(name);
       this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
     },
     downloadFile () {
