@@ -100,9 +100,21 @@ async function createWindow () {
       fs.mkdirSync(downloadDir, { recursive: true });
     }
 
+    const makeUniqueName = (name) => {
+      const parsed = path.parse(name);
+      let candidate = name;
+      let counter = 1;
+      while (fs.existsSync(path.join(downloadDir, candidate))) {
+        candidate = `${parsed.name}(${counter})${parsed.ext}`;
+        counter++;
+      }
+      return candidate;
+    };
+
     const { session } = mainWindow.webContents;
     const handleWillDownload = (e, item) => {
-      const finalName = filename || item.getFilename();
+      const requestName = filename || item.getFilename();
+      const finalName = makeUniqueName(requestName);
       const destPath = path.join(downloadDir, finalName);
       item.setSavePath(destPath);
 
@@ -112,6 +124,7 @@ async function createWindow () {
           const received = item.getReceivedBytes();
           const percent = total > 0 ? Math.round((received / total) * 100) : 0;
           mainWindow.webContents.send('download-progress', {
+            requestName,
             filename: finalName,
             percent
           });
@@ -122,11 +135,15 @@ async function createWindow () {
         session.removeListener('will-download', handleWillDownload);
         if (state === 'completed') {
           mainWindow.webContents.send('download-done', {
+            requestName,
             filename: finalName,
             filePath: destPath
           });
         } else {
-          mainWindow.webContents.send('download-error', `Download failed: ${state}`);
+          mainWindow.webContents.send('download-error', {
+            requestName,
+            error: `Download failed: ${state}`
+          });
         }
       });
     };

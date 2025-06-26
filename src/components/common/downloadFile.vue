@@ -52,23 +52,29 @@ export default {
   },
   methods: {
     registerListeners () {
-      this.removeProgress = window.electronAPI.onDownloadProgress(({ filename, percent }) => {
-        if (filename === this.contentData.name) {
+      this.removeProgress = window.electronAPI.onDownloadProgress(({ requestName, percent }) => {
+        if (requestName === this.contentData.name) {
           this.progress = percent;
         }
       });
-      this.removeDone = window.electronAPI.onDownloadDone(({ filename, filePath }) => {
-        if (filename === this.contentData.name) {
+      this.removeDone = window.electronAPI.onDownloadDone(({ requestName, filename, filePath }) => {
+        if (requestName === this.contentData.name) {
           this.progress = 100;
           this.progressVisible = false;
           this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
+          // 更新本地路径
+          const data = { ...this.contentData, localPath: filePath, name: filename };
+          this.msgInfo.content = JSON.stringify(data);
+          this.chatStore.updateMessage(this.msgInfo, this.chat);
           console.log('下载完成：', filePath);
         }
       });
-      this.removeError = window.electronAPI.onDownloadError((errMsg) => {
-        this.progressStatus = 'exception';
-        this.progressVisible = false;
-        console.error('下载失败：', errMsg);
+      this.removeError = window.electronAPI.onDownloadError(({ requestName, error }) => {
+        if (requestName === this.contentData.name) {
+          this.progressStatus = 'exception';
+          this.progressVisible = false;
+          console.error('下载失败：', error);
+        }
       });
     },
     cleanup () {
