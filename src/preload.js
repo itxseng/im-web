@@ -48,6 +48,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const filePath = path.join(os.homedir(), 'Downloads', 'Hezi', filename);
     return fs.existsSync(filePath);
   },
+  checkPathExists: (filePath) => {
+    if (!filePath) return false;
+    return fs.existsSync(filePath);
+  },
   showFloatingMenu: (options) => ipcRenderer.send('show-floating-menu', options),
   onMenuCommand: (callback) => ipcRenderer.on('menu-command', (e, cmd) => callback(cmd))
 });

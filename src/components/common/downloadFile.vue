@@ -78,7 +78,7 @@ export default {
     },
     checkLocalFile () {
       const { name, localPath } = this.contentData || {};
-      if (localPath) {
+      if (localPath && window.electronAPI.checkPathExists(localPath)) {
         this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
         return;
       }
@@ -100,10 +100,11 @@ export default {
       window.electronAPI.downloadFile({ url: downloadUrl, filename });
     },
     openFile () {
-      if (this.contentData.localPath) {
-        window.electronAPI.showInLocalFolder(this.contentData.localPath);
+      const { localPath, name } = this.contentData || {};
+      if (localPath && window.electronAPI.checkPathExists(localPath)) {
+        window.electronAPI.showInLocalFolder(localPath);
       } else {
-        const filename = this.contentData?.name;
+        const filename = name;
         if (!filename) return;
         window.electronAPI.showInFolderByName(filename);
       }
