@@ -29,7 +29,10 @@ export default {
       progress: 0,
       progressVisible: false,
       progressStatus: 'success',
-      fileCheckInterval: null
+      fileCheckInterval: null,
+      removeProgressListener: null,
+      removeDoneListener: null,
+      removeErrorListener: null
     };
   },
   props: {
@@ -47,13 +50,13 @@ export default {
     this.startFileCheckTimer()
 
     // 防止重复注册监听
-    window.electronAPI.onDownloadProgress(({ filename, percent }) => {
+    this.removeProgressListener = window.electronAPI.onDownloadProgress(({ filename, percent }) => {
       if (filename === this.contentData.name) {
         this.progress = percent;
       }
     });
 
-    window.electronAPI.onDownloadDone(({ filename, filePath }) => {
+    this.removeDoneListener = window.electronAPI.onDownloadDone(({ filename, filePath }) => {
       console.log('download done', filename, filePath);
 
       if (filename === this.contentData.name) {
@@ -64,7 +67,7 @@ export default {
       }
     });
 
-    window.electronAPI?.onDownloadError?.((errMsg) => {
+    this.removeErrorListener = window.electronAPI?.onDownloadError?.((errMsg) => {
       this.progressStatus = 'exception';
       this.progressVisible = false;
       console.error('下载失败：', errMsg);
@@ -74,6 +77,9 @@ export default {
     if (this.fileCheckInterval) {
       clearInterval(this.fileCheckInterval);
     }
+    this.removeProgressListener && this.removeProgressListener();
+    this.removeDoneListener && this.removeDoneListener();
+    this.removeErrorListener && this.removeErrorListener();
   },
   methods: {
     validStatus (status) {
@@ -110,16 +116,15 @@ export default {
         // console.log('check file exists', exists);
         this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, exists)
         // 如果文件已存在了，停止监听
-        // if (exists) {
-        //   clearInterval(this.fileCheckInterval);
-        //   this.fileCheckInterval = null;
-        // }
+        if (exists) {
+          clearInterval(this.fileCheckInterval);
+          this.fileCheckInterval = null;
+        }
       }, 2000);
     },
     downloadFile () {
       const filename = this.contentData?.name;
       const downloadUrl = this.contentData?.url?.originUrl;
-      this.chatStore.setDownload(this.isChat.sendId,)
 
       if (!filename || !downloadUrl) {
         console.warn('缺少文件名或下载地址');
@@ -129,7 +134,7 @@ export default {
       this.progress = 0;
       this.progressVisible = true;
       this.progressStatus = 'success';
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
+      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false)
       window.electronAPI?.downloadFile?.({
         url: downloadUrl,
         filename: filename

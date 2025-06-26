@@ -18,20 +18,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadFile: ({ url, filename }) => ipcRenderer.send('download-file', { url, filename }),
 
   onDownloadProgress: (callback) => {
-    ipcRenderer.on('download-progress', (event, data) => {
+    const handler = (event, data) => {
       callback(data); // data: { filename, percent }
-    });
+    };
+    ipcRenderer.on('download-progress', handler);
+    return () => ipcRenderer.removeListener('download-progress', handler);
   },
 
   onDownloadDone: (callback) => {
-    ipcRenderer.on('download-done', (event, data) => {
+    const handler = (event, data) => {
       callback(data); // data: { filename, filePath }
-    });
+    };
+    ipcRenderer.on('download-done', handler);
+    return () => ipcRenderer.removeListener('download-done', handler);
   },
 
-  onDownloadError: (callback) => ipcRenderer.on('download-error', (event, errorMsg) => {
-    callback(errorMsg)
-  }),
+  onDownloadError: (callback) => {
+    const handler = (event, errorMsg) => {
+      callback(errorMsg);
+    };
+    ipcRenderer.on('download-error', handler);
+    return () => ipcRenderer.removeListener('download-error', handler);
+  },
   showInFolder: (filePath) => ipcRenderer.send('show-in-folder', filePath),
   showInLocalFolder: (filePath) => ipcRenderer.send('show-in-local-folder', filePath),
   showInFolderByName: (filename) => ipcRenderer.send('show-in-folder-by-name', filename),
