@@ -83,14 +83,11 @@ export default {
       this.removeError && this.removeError();
     },
     checkLocalFile () {
-      const { name, localPath } = this.contentData || {};
-      if (localPath && window.electronAPI.checkPathExists(localPath)) {
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
-        return;
+      const { localPath } = this.contentData || {};
+      if (!this.isMegInfo.isDownload) return;
+      if (!localPath || !window.electronAPI.checkPathExists(localPath)) {
+        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
       }
-      if (!name) return;
-      const exists = window.electronAPI.checkFileExists(name);
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
     },
     downloadFile () {
       const filename = this.contentData?.name;
