@@ -84,8 +84,14 @@ export default {
     },
     checkLocalFile () {
       const { localPath } = this.contentData || {};
-      if (!this.isMegInfo.isDownload) return;
-      if (!localPath || !window.electronAPI.checkPathExists(localPath)) {
+      // 如果是自己发送的文件，根据本地路径决定是否已下载
+      if (this.isMegInfo.selfSend) {
+        const exists = localPath && window.electronAPI.checkPathExists(localPath);
+        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
+        return;
+      }
+      if (this.isMegInfo.isDownload && (!localPath || !window.electronAPI.checkPathExists(localPath))) {
+        // 已标记为已下载，但本地路径丢失时重置状态
         this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
       }
     },

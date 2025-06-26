@@ -478,6 +478,7 @@ export default {
       let msgInfo = JSON.parse(JSON.stringify(file.msgInfo));
       msgInfo.content = JSON.stringify(data);
       msgInfo.receipt = this.isReceipt
+      msgInfo.isDownload = true
       this.sendMessageRequest(msgInfo).then((m) => {
         msgInfo.loadStatus = 'ok',
           msgInfo.id = m.id
@@ -517,7 +518,8 @@ export default {
         type: this.$enums.MESSAGE_TYPE.FILE,
         loadStatus: "loading",
         readedCount: 0,
-        status: this.$enums.MESSAGE_STATUS.UNSEND
+        status: this.$enums.MESSAGE_STATUS.UNSEND,
+        isDownload: true
       }
       // 填充对方id
       this.fillTargetId(msgInfo, this.chat.targetId);
