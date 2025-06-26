@@ -61,7 +61,7 @@
                      @scroll="onScroll">
               <div class="im-chat-box">
                 <div v-for="(msgInfo, idx) in chat.messages"
-                     :key="idx">
+                     :key="msgInfo.id || msgInfo.tmpId || idx">
                   <chat-message-item v-if="idx >= showMinIdx && (showMaxIdx < 0 || idx < showMaxIdx)"
                                      :id="msgInfo.id"
                                      @call="onCall(msgInfo.type)"
