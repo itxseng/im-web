@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onDownloadProgress: (callback) => {
     const handler = (event, data) => {
-      callback(data); // data: { filename, percent }
+      callback(data); // data: { requestName, filename, percent }
     };
     ipcRenderer.on('download-progress', handler);
     return () => ipcRenderer.removeListener('download-progress', handler);
@@ -27,15 +27,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onDownloadDone: (callback) => {
     const handler = (event, data) => {
-      callback(data); // data: { filename, filePath }
+      callback(data); // data: { requestName, filename, filePath }
     };
     ipcRenderer.on('download-done', handler);
     return () => ipcRenderer.removeListener('download-done', handler);
   },
 
   onDownloadError: (callback) => {
-    const handler = (event, errorMsg) => {
-      callback(errorMsg);
+    const handler = (event, data) => {
+      callback(data); // data: { requestName, error }
     };
     ipcRenderer.on('download-error', handler);
     return () => ipcRenderer.removeListener('download-error', handler);
