@@ -92,7 +92,8 @@ async function createWindow () {
   })
 
   // ✅ 文件下载监听器，使用 Electron 的 session.downloadURL 获取进度
-  ipcMain.on('download-file', (event, { url, filename }) => {
+  // requestId 用于区分同名文件的多个并发下载
+  ipcMain.on('download-file', (event, { url, filename, requestId }) => {
     if (!mainWindow) return;
 
     const downloadDir = path.join(os.homedir(), 'Downloads', 'Hezi');
@@ -124,6 +125,7 @@ async function createWindow () {
           const received = item.getReceivedBytes();
           const percent = total > 0 ? Math.round((received / total) * 100) : 0;
           mainWindow.webContents.send('download-progress', {
+            requestId,
             requestName,
             filename: finalName,
             percent
@@ -135,12 +137,14 @@ async function createWindow () {
         session.removeListener('will-download', handleWillDownload);
         if (state === 'completed') {
           mainWindow.webContents.send('download-done', {
+            requestId,
             requestName,
             filename: finalName,
             filePath: destPath
           });
         } else {
           mainWindow.webContents.send('download-error', {
+            requestId,
             requestName,
             error: `Download failed: ${state}`
           });

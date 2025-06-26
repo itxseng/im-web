@@ -52,25 +52,25 @@ export default {
   },
   methods: {
     registerListeners () {
-      this.removeProgress = window.electronAPI.onDownloadProgress(({ requestName, percent }) => {
-        if (requestName === this.contentData.name) {
+      this.removeProgress = window.electronAPI.onDownloadProgress(({ requestId, percent }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
           this.progress = percent;
         }
       });
-      this.removeDone = window.electronAPI.onDownloadDone(({ requestName, filename, filePath }) => {
-        if (requestName === this.contentData.name) {
+      this.removeDone = window.electronAPI.onDownloadDone(({ requestId, filename, filePath }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
           this.progress = 100;
           this.progressVisible = false;
           this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
           // 更新本地路径
-          const data = { ...this.contentData, localPath: filePath, name: filename };
+          const data = { ...this.contentData, localPath: filePath };
           this.msgInfo.content = JSON.stringify(data);
           this.chatStore.updateMessage(this.msgInfo, this.chat);
           console.log('下载完成：', filePath);
         }
       });
-      this.removeError = window.electronAPI.onDownloadError(({ requestName, error }) => {
-        if (requestName === this.contentData.name) {
+      this.removeError = window.electronAPI.onDownloadError(({ requestId, error }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
           this.progressStatus = 'exception';
           this.progressVisible = false;
           console.error('下载失败：', error);
@@ -99,8 +99,9 @@ export default {
       this.progress = 0;
       this.progressVisible = true;
       this.progressStatus = 'success';
+      const requestId = this.isMegInfo.id || this.isMegInfo.tmpId;
       this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
-      window.electronAPI.downloadFile({ url: downloadUrl, filename });
+      window.electronAPI.downloadFile({ url: downloadUrl, filename, requestId });
     },
     openFile () {
       const { localPath, name } = this.contentData || {};

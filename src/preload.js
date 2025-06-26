@@ -15,11 +15,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUsername: () => os.userInfo().username,
 
   // ✅ 文件下载相关
-  downloadFile: ({ url, filename }) => ipcRenderer.send('download-file', { url, filename }),
+  downloadFile: ({ url, filename, requestId }) => ipcRenderer.send('download-file', { url, filename, requestId }),
 
   onDownloadProgress: (callback) => {
     const handler = (event, data) => {
-      callback(data); // data: { requestName, filename, percent }
+      callback(data); // data: { requestId, requestName, filename, percent }
     };
     ipcRenderer.on('download-progress', handler);
     return () => ipcRenderer.removeListener('download-progress', handler);
@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onDownloadDone: (callback) => {
     const handler = (event, data) => {
-      callback(data); // data: { requestName, filename, filePath }
+      callback(data); // data: { requestId, requestName, filename, filePath }
     };
     ipcRenderer.on('download-done', handler);
     return () => ipcRenderer.removeListener('download-done', handler);
@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onDownloadError: (callback) => {
     const handler = (event, data) => {
-      callback(data); // data: { requestName, error }
+      callback(data); // data: { requestId, requestName, error }
     };
     ipcRenderer.on('download-error', handler);
     return () => ipcRenderer.removeListener('download-error', handler);
