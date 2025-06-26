@@ -12,7 +12,7 @@ const http = axios.create({
  * 请求拦截
  */
 http.interceptors.request.use(config => {
-  let accessToken = sessionStorage.getItem("accessToken");
+  let accessToken = window.electronStore.getItem("accessToken");
   if (accessToken) {
     config.headers.accessToken = encodeURIComponent(accessToken);
   }
@@ -31,7 +31,7 @@ http.interceptors.response.use(async response => {
     location.href = "/";
   } else if (response.data.code == 401) {
     console.log("token失效，尝试重新获取")
-    let refreshToken = sessionStorage.getItem("refreshToken");
+    let refreshToken = window.electronStore.getItem("refreshToken");
     if (!refreshToken) {
       location.href = "/";
     }
@@ -46,8 +46,8 @@ http.interceptors.response.use(async response => {
       location.href = "/";
     })
     // 保存token
-    sessionStorage.setItem("accessToken", data.accessToken);
-    sessionStorage.setItem("refreshToken", data.refreshToken);
+    window.electronStore.setItem("accessToken", data.accessToken);
+    window.electronStore.setItem("refreshToken", data.refreshToken);
     // 重新发送刚才的请求
     return http(response.config)
   } else {

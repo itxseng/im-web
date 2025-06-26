@@ -56,7 +56,7 @@ export default {
             this.form.oldPassword = '';
             this.form.newPassword = '';
             this.$wsApi.close(3000);
-            sessionStorage.removeItem("accessToken");
+            window.electronStore.removeItem("accessToken");
             location.href = "/";
           }).catch(err => {
             this.$message.error(err);

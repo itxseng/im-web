@@ -198,8 +198,8 @@ export default {
       }
       const res = await login(query)
       if (res.accessToken) {
-        sessionStorage.setItem("accessToken", res.accessToken);
-        sessionStorage.setItem("refreshToken", res.refreshToken);
+        window.electronStore.setItem("accessToken", res.accessToken);
+        window.electronStore.setItem("refreshToken", res.refreshToken);
         this.$router.push("/home/chat");
         window.electronAPI.resize(1000, 650);
       }

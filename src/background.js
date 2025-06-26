@@ -22,6 +22,35 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow  // 用于发送进度
 let menuWindow  // 用于右键浮动菜单
 
+// —— 持久化存储 —— //
+const storeFile = path.join(app.getPath('userData'), 'store.json');
+let store = {};
+try {
+  store = JSON.parse(fs.readFileSync(storeFile, 'utf8'));
+} catch (e) {
+  store = {};
+}
+const saveStore = () => {
+  try {
+    fs.writeFileSync(storeFile, JSON.stringify(store));
+  } catch (err) {
+    console.error('Failed to save store:', err);
+  }
+};
+ipcMain.on('store-get', (event, key) => {
+  event.returnValue = store[key];
+});
+ipcMain.on('store-set', (event, { key, value }) => {
+  store[key] = value;
+  saveStore();
+  event.returnValue = true;
+});
+ipcMain.on('store-remove', (event, key) => {
+  delete store[key];
+  saveStore();
+  event.returnValue = true;
+});
+
 async function createWindow () {
   const win = new BrowserWindow({
     width: 450,

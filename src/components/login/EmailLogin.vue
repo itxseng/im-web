@@ -178,9 +178,9 @@ export default {
                 this.setCookie('username', this.loginForm.userName);
                 this.setCookie('password', this.loginForm.password);
                 // 保存token
-                sessionStorage.setItem("accessToken", data.accessToken);
-                sessionStorage.setItem("refreshToken", data.refreshToken);
-                sessionStorage.setItem("userNameList", JSON.stringify(this.userNameList));
+                window.electronStore.setItem("accessToken", data.accessToken);
+                window.electronStore.setItem("refreshToken", data.refreshToken);
+                window.electronStore.setItem("userNameList", JSON.stringify(this.userNameList));
                 this.$message.success("登录成功");
                 this.$router.push("/home/chat");
                 window.electronAPI.resize(1000, 650);
@@ -218,7 +218,7 @@ export default {
       }
     };
     // window.addEventListener('click',this.handleGlobalClick)
-    let arr = sessionStorage.getItem('userNameList') ? JSON.parse(sessionStorage.getItem('userNameList')) : [];
+    let arr = window.electronStore.getItem('userNameList') ? JSON.parse(window.electronStore.getItem('userNameList')) : [];
     // 删除arr中email为空的值
     this.userNameList = arr.filter(item => item.email)
     this.loginForm.userName = this.userNameList.length > 0 ? this.userNameList[0].userName : '';

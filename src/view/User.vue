@@ -189,9 +189,9 @@ export default {
     },
     onExit () {
       this.$wsApi.close(3000);
-      sessionStorage.removeItem("accessToken");
+      window.electronStore.removeItem("accessToken");
       let userInfo = this.userStore.userInfo;
-      let userList = sessionStorage.getItem("userNameList") ? JSON.parse(sessionStorage.getItem("userNameList")) : [];
+      let userList = window.electronStore.getItem("userNameList") ? JSON.parse(window.electronStore.getItem("userNameList")) : [];
       if (userList && userList.length > 0) {
         // 如果用户列表中已经存在该用户，则删除
         for (let i = 0; i < userList.length; i++) {
@@ -205,7 +205,7 @@ export default {
       } else {
         userList.push({ img: userInfo.headImage, phone: userInfo.phone, email: userInfo.email })
       }
-      sessionStorage.setItem("userNameList", JSON.stringify(userList));
+      window.electronStore.setItem("userNameList", JSON.stringify(userList));
       location.href = "/";
     },
     back () {

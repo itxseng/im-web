@@ -43,3 +43,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showFloatingMenu: (options) => ipcRenderer.send('show-floating-menu', options),
   onMenuCommand: (callback) => ipcRenderer.on('menu-command', (e, cmd) => callback(cmd))
 });
+
+// 简易存储接口，使用同步 ipc 调用主进程持久化数据
+contextBridge.exposeInMainWorld('electronStore', {
+  getItem: (key) => ipcRenderer.sendSync('store-get', key),
+  setItem: (key, value) => ipcRenderer.sendSync('store-set', { key, value }),
+  removeItem: (key) => ipcRenderer.sendSync('store-remove', key)
+});

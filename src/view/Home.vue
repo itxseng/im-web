@@ -126,7 +126,7 @@ export default {
       });
       this.loadStore().then(() => {
         // ws初始化
-        this.$wsApi.connect(process.env.VUE_APP_WS_URL, sessionStorage.getItem("accessToken"));
+        this.$wsApi.connect(process.env.VUE_APP_WS_URL, window.electronStore.getItem("accessToken"));
         this.$wsApi.onConnect(() => {
           if (this.reconnecting) {
             this.onReconnectWs();
@@ -201,7 +201,7 @@ export default {
       this.userStore.loadUser().then(() => {
         // 断线重连
         this.$message.error("连接断开，正在尝试重新连接...");
-        this.$wsApi.reconnect(process.env.VUE_APP_WS_URL, sessionStorage.getItem(
+        this.$wsApi.reconnect(process.env.VUE_APP_WS_URL, window.electronStore.getItem(
           "accessToken"));
       }).catch(() => {
         // 10s后重试
@@ -495,9 +495,9 @@ export default {
     },
     onExit () {
       this.$wsApi.close(3000);
-      sessionStorage.removeItem("accessToken");
+      window.electronStore.removeItem("accessToken");
       let userInfo = this.userStore.userInfo;
-      let userList = sessionStorage.getItem("userNameList") ? JSON.parse(sessionStorage.getItem("userNameList")) : [];
+      let userList = window.electronStore.getItem("userNameList") ? JSON.parse(window.electronStore.getItem("userNameList")) : [];
       if (userList && userList.length > 0) {
         // 如果用户列表中已经存在该用户，则删除
         for (let i = 0; i < userList.length; i++) {
@@ -511,7 +511,7 @@ export default {
       } else {
         userList.push({ img: userInfo.headImage, phone: userInfo.phone, email: userInfo.email })
       }
-      sessionStorage.setItem("userNameList", JSON.stringify(userList));
+      window.electronStore.setItem("userNameList", JSON.stringify(userList));
       location.href = "/";
     },
     closeAllBox () {

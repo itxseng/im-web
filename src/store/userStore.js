@@ -61,18 +61,18 @@ export default defineStore('userStore', {
           typeof window.electronAPI !== 'undefined';
       }
       // 获取 deviceName
-      let deviceName = localStorage.getItem('deviceName');
+      let deviceName = window.electronStore.getItem('deviceName');
       if (!deviceName) {
         if (isElectron()) {
           deviceName = window.electronAPI.getUsername();
         } else {
           deviceName = 'Windows PC'
         }
-        localStorage.setItem('deviceName', deviceName);
+        window.electronStore.setItem('deviceName', deviceName);
       }
       this.setDeviceName(deviceName);
       // 获取 deviceId
-      let deviceId = localStorage.getItem('deviceId');
+      let deviceId = window.electronStore.getItem('deviceId');
       if (!deviceId) {
         const raw = [
           os.platform(),
@@ -83,7 +83,7 @@ export default defineStore('userStore', {
         ].join('-');
 
         deviceId = crypto.createHash('md5').update(raw).digest('hex');
-        localStorage.setItem('deviceId', deviceId);
+        window.electronStore.setItem('deviceId', deviceId);
       }
       this.setDeviceId(deviceId);
     }

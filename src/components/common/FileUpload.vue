@@ -11,9 +11,9 @@ export default {
 	data() {
 		return {
 			loading: null,
-			uploadHeaders: {
-				"accessToken": sessionStorage.getItem('accessToken')
-			}
+                        uploadHeaders: {
+                                "accessToken": window.electronStore.getItem('accessToken')
+                        }
 		}
 	},
 	props: {

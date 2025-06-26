@@ -19,8 +19,8 @@ export default {
     }
   },
   created () {
-    this.deviceName = localStorage.getItem('deviceName');
-    this.deviceId = localStorage.getItem('deviceId');
+    this.deviceName = window.electronStore.getItem('deviceName');
+    this.deviceId = window.electronStore.getItem('deviceId');
     this.getEquipment()
   },
   mounted () {
