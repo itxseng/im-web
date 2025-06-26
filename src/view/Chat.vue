@@ -42,7 +42,7 @@
       <el-scrollbar class="chat-list-items"
                     v-else>
         <div v-for="(chat, index) in chatStore.chats"
-             :key="index" >
+             :key="index">
           <chat-item v-if="!chat.delete && chat.showName.includes(searchText)"
                      :chat="chat"
                      :index="index"
@@ -52,6 +52,7 @@
                      @info="onShowInfo(chat)"
                      @unpinfromtop="unpinFromTop(index)"
                      @heimingdan="blacklist"
+                     @chakangerenxinxi="showFriendInfo"
                      :active="chat === chatStore.activeChat"></chat-item>
         </div>
       </el-scrollbar>
@@ -65,14 +66,17 @@
       </div>
       <chat-box v-if="activeChat && activeChat.type != 'SYSTEM'"
                 :chat="activeChat"
-                :itemIndex="isShow"></chat-box>
+                :itemIndex="isShow"
+                :showUserInfo="showUserInfo"></chat-box>
       <chat-system-box v-if="activeChat && activeChat.type == 'SYSTEM'"
                        :chat="activeChat"></chat-system-box>
       <add-friend :dialogVisible="showAddFriend"
                   @close="onCloseAddFriend"></add-friend>
       <el-dialog :visible.sync="dialogModal"
-                 width="450px" :destroy-on-close="true">
-        <CreateGroup @reload="dialogModalClose" @close="dialogModalClose"/>
+                 width="450px"
+                 :destroy-on-close="true">
+        <CreateGroup @reload="dialogModalClose"
+                     @close="dialogModalClose" />
       </el-dialog>
     </el-container>
   </el-container>
@@ -103,7 +107,15 @@ export default {
       groupMembers: [],
       isShow: null,
       showAddFriend: false,
-      dialogModal: false
+      dialogModal: false,
+      friendInfoModal: false,
+      editRemarkState: false,
+      editMessage: null,// 需要被修改的消息
+      isSelected: false,
+      selectMessageList: [],
+      dialogType: '',
+      commonGroupList: [],
+      showUserInfo:false
     }
   },
   methods: {
@@ -117,8 +129,7 @@ export default {
       this.showAddFriend = false;
     },
     onActiveItem (item, index) {
-      console.log(item);
-      
+      this.showUserInfo = false
       this.isShow = index
       this.chatStore.setActiveChat(item.targetId);
     },
@@ -156,6 +167,15 @@ export default {
             this.$message.success('已加入黑名单');
           })
       }
+    },
+    showFriendInfo (item) {
+      this.chatStore.chats.forEach((chat, index) => {
+        if (item.targetId == chat.targetId) {
+          this.isShow = index
+        }
+      })
+      this.chatStore.setActiveChat(item.targetId);
+      this.showUserInfo = true
     }
   },
   computed: {

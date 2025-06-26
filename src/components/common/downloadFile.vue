@@ -4,15 +4,15 @@
     <!-- 未下载：显示下载图标 -->
     <i class="el-icon-bottom"
        @click="downloadFile"
-       v-if="progressVisible === false && this.isMegInfo.isDownload === false"></i>
+       v-if="!progressVisible && !this.isMegInfo.isDownload"></i>
     <!-- 已下载：点击打开文件夹 -->
     <div class="file-icon"
-         v-else-if="progressVisible === false && this.isMegInfo.isDownload"
+         v-else-if="!progressVisible && this.isMegInfo.isDownload"
          @click="openFile">
       <span class="el-icon-document"></span>
     </div>
     <!-- 正在下载：显示进度圈 -->
-    <div v-else
+    <div v-else-if="progressVisible"
          class="download-file-progress">
       <el-progress type="circle"
                    :percentage="progress"
@@ -24,138 +24,110 @@
 
 <script>
 export default {
+  props: {
+    msgInfo: { type: Object, default: () => ({}) },
+    chat: { type: Object, default: () => ({}) }
+  },
   data () {
     return {
       progress: 0,
       progressVisible: false,
       progressStatus: 'success',
-      fileCheckInterval: null
+      removeProgress: null,
+      removeDone: null,
+      removeError: null
     };
   },
-  props: {
-    msgInfo: {
-      type: Object,
-      default: () => ({})
-    },
-    chat: {
-      type: Object,
-      default: () => ({})
-    }
+  computed: {
+    contentData () { return JSON.parse(this.msgInfo.content) },
+    isChat () { return this.chat },
+    isMegInfo () { return this.msgInfo }
   },
   mounted () {
-    this.checkDownloaded();
-    this.startFileCheckTimer()
-
-    // 防止重复注册监听
-    window.electronAPI.onDownloadProgress(({ filename, percent }) => {
-      if (filename === this.contentData.name) {
-        this.progress = percent;
-      }
-    });
-
-    window.electronAPI.onDownloadDone(({ filename, filePath }) => {
-      console.log('download done', filename, filePath);
-
-      if (filename === this.contentData.name) {
-        this.progress = 100;
-        this.progressVisible = false;
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
-        console.log('下载完成：', filePath);
-      }
-    });
-
-    window.electronAPI?.onDownloadError?.((errMsg) => {
-      this.progressStatus = 'exception';
-      this.progressVisible = false;
-      console.error('下载失败：', errMsg);
-    });
+    this.checkLocalFile();
+    this.registerListeners();
   },
   beforeDestroy () {
-    if (this.fileCheckInterval) {
-      clearInterval(this.fileCheckInterval);
-    }
+    this.cleanup();
   },
   methods: {
-    validStatus (status) {
-      console.log('validStatus:', status);
-
-      const valid = ['success', 'exception', 'warning'];
-      return valid.includes(status) ? status : 'success';
+    registerListeners () {
+      this.removeProgress = window.electronAPI.onDownloadProgress(({ requestId, percent }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
+          this.progress = percent;
+        }
+      });
+      this.removeDone = window.electronAPI.onDownloadDone(({ requestId, filename, filePath }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
+          this.progress = 100;
+          this.progressVisible = false;
+          this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
+          // 更新本地路径
+          const data = { ...this.contentData, localPath: filePath };
+          this.msgInfo.content = JSON.stringify(data);
+          this.chatStore.updateMessage(this.msgInfo, this.chat);
+          console.log('下载完成：', filePath);
+        }
+      });
+      this.removeError = window.electronAPI.onDownloadError(({ requestId, error }) => {
+        if (requestId === (this.isMegInfo.id || this.isMegInfo.tmpId)) {
+          this.progressStatus = 'exception';
+          this.progressVisible = false;
+          console.error('下载失败：', error);
+        }
+      });
     },
-    checkDownloaded () {
-      this.progressVisible = false;
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false)
-      if (this.contentData.localPath) {
-        this.progressVisible = false;
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
-      } else {
-        const filename = this.contentData?.name;
-        if (!filename) return;
-        const exists = window.electronAPI.checkFileExists(filename);
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, !!exists);
-      }
+    cleanup () {
+      this.removeProgress && this.removeProgress();
+      this.removeDone && this.removeDone();
+      this.removeError && this.removeError();
     },
-    startFileCheckTimer () {
-      const filename = this.contentData?.name;
-      if (!filename || this.contentData?.localPath) return;
-
-      // 先清一次
-      if (this.fileCheckInterval) {
-        clearInterval(this.fileCheckInterval);
+    checkLocalFile () {
+      const { localPath } = this.contentData || {};
+      console.log('this.contentData',this.contentData);
+      this.$forceUpdate()
+      if (!this.isMegInfo.isDownload) return;
+      if (!localPath || !window.electronAPI.checkPathExists(localPath)) {
+        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
       }
-
-      // 每2秒检查一次
-      this.fileCheckInterval = setInterval(() => {
-        const exists = window.electronAPI.checkFileExists(filename);
-        // console.log('check file exists', exists);
-        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, exists)
-        // 如果文件已存在了，停止监听
-        // if (exists) {
-        //   clearInterval(this.fileCheckInterval);
-        //   this.fileCheckInterval = null;
-        // }
-      }, 2000);
     },
     downloadFile () {
       const filename = this.contentData?.name;
       const downloadUrl = this.contentData?.url?.originUrl;
-      this.chatStore.setDownload(this.isChat.sendId,)
-
       if (!filename || !downloadUrl) {
         console.warn('缺少文件名或下载地址');
         return;
       }
-
       this.progress = 0;
       this.progressVisible = true;
       this.progressStatus = 'success';
-      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true)
-      window.electronAPI?.downloadFile?.({
-        url: downloadUrl,
-        filename: filename
-      });
+      const requestId = this.isMegInfo.id || this.isMegInfo.tmpId;
+      this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
+      window.electronAPI.downloadFile({ url: downloadUrl, filename, requestId });
     },
     openFile () {
-      if (this.contentData.localPath) {
-        const filePath = this.contentData.localPath;
-        window.electronAPI.showInLocalFolder(filePath);
+      const { localPath, name } = this.contentData || {};
+      const filename = name;
+
+      if (localPath && window.electronAPI.checkPathExists(localPath)) {
+        window.electronAPI.showInLocalFolder(localPath);
       } else {
-        const filename = this.contentData?.name;
-        if (!filename) return;
-        window.electronAPI.showInFolderByName(filename);
+        // 本地文件不存在，更新状态为未下载
+        console.warn('本地文件已被删除，恢复为未下载状态');
+
+        this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
+
+        // 更新 msgInfo.content 中的 localPath 字段
+        const newContent = { ...this.contentData, localPath: null };
+        this.msgInfo.content = JSON.stringify(newContent);
+        this.chatStore.updateMessage(this.msgInfo, this.chat);
+
+        // 调用 fallback：根据文件名去 Downloads 目录找
+        if (filename) {
+          window.electronAPI.showInFolderByName(filename);
+        }
       }
     }
-  },
-  computed: {
-    contentData () {
-      return JSON.parse(this.isMegInfo.content)
-    },
-    isChat () {
-      return this.chat
-    },
-    isMegInfo () {
-      return this.msgInfo
-    },
   }
 };
 </script>

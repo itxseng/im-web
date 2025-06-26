@@ -57,11 +57,12 @@ export default {
   data () {
     return {
       menuItems: [
+        // {
+        //   key: 'GUIDANG',
+        //   name: '归档',
+        //   icon: 'el-icon-top'
+        // }, 
         {
-          key: 'GUIDANG',
-          name: '归档',
-          icon: 'el-icon-top'
-        }, {
           key: 'TOP',
           name: '置顶',
           icon: 'el-icon-top'
@@ -95,10 +96,10 @@ export default {
           name: '投诉',
           icon: 'el-icon-delete'
         },
-        {
-          key: 'INFO',
-          name: '查看资料'
-        }
+        // {
+        //   key: 'INFO',
+        //   name: '查看资料'
+        // }
       ]
     }
   },
@@ -164,7 +165,7 @@ export default {
     },
     onSelectMenu (item) {
       console.log(item.key.toLowerCase());
-      if (item.key === 'HEIMINGDAN') {
+      if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI') {
         this.$emit(item.key.toLowerCase(), this.chat);
       } else {
         this.$emit(item.key.toLowerCase(), this.msgInfo);
@@ -201,7 +202,7 @@ export default {
       } else if (msg.type == this.$enums.MESSAGE_TYPE.TEXT ||
         msg.type == this.$enums.MESSAGE_TYPE.RECALL ||
         msg.type == this.$enums.MESSAGE_TYPE.TIP_TEXT) {
-        content = msg.content;
+        content = this.$emo.transform(msg.content, 'emoji-small');
       }
       return content;
     },

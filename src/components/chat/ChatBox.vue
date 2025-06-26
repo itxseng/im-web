@@ -61,7 +61,7 @@
                      @scroll="onScroll">
               <div class="im-chat-box">
                 <div v-for="(msgInfo, idx) in chat.messages"
-                     :key="idx">
+                     :key="msgInfo.id || msgInfo.tmpId || idx">
                   <chat-message-item v-if="idx >= showMinIdx && (showMaxIdx < 0 || idx < showMaxIdx)"
                                      :id="msgInfo.id"
                                      @call="onCall(msgInfo.type)"
@@ -323,6 +323,10 @@ export default {
     },
     itemIndex: {
       type: Number
+    },
+    showUserInfo: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -479,8 +483,9 @@ export default {
       msgInfo.content = JSON.stringify(data);
       msgInfo.receipt = this.isReceipt
       this.sendMessageRequest(msgInfo).then((m) => {
-        msgInfo.loadStatus = 'ok',
-          msgInfo.id = m.id
+        msgInfo.loadStatus = 'ok';
+        msgInfo.isDownload = true;
+        msgInfo.id = m.id
         this.isReceipt = false;
         this.refreshPlaceHolder();
         this.chatStore.insertMessage(msgInfo, file.chat);
@@ -1322,6 +1327,15 @@ export default {
       handler (value) {
         if (value) {
           this.loadFriend(this.chat.targetId)
+        }
+      }
+    },
+    showUserInfo: {
+      handler (value) {
+        if (value) {
+          this.editRemarkState = false
+          this.friendInfoModal = true
+          this.dialogType = '个人信息'
         }
       }
     }
