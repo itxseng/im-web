@@ -13,7 +13,8 @@
       </div>
       <ul class="user-list">
         <!-- 用户信息 -->
-        <li class="user-list-info" @click="showRight({title:'个人信息',routeName:'UserInfo'})">
+        <li class="user-list-info"
+            @click="showRight({title:'个人信息',routeName:'UserInfo'})">
           <div class="user-list-info-img">
             <img :src="userInfo.headImage"
                  alt="">
@@ -166,11 +167,15 @@ export default {
       if (item.routeName === 'Quit') {
         this.quitModal = true
       } else {
-        this.title = item.title
-        // this.$store.commit('setUserPageTitle', item.title)
-        this.$router.push({
-          name: item.routeName
-        })
+        // 判断路由页面是否存在
+        if (item.routeName === 'Equipment' || item.routeName === 'Privacy' || item.routeName === 'Blacklist' || item.routeName === 'UserInfo' || item.routeName === 'Pyq') {
+          this.title = item.title
+          this.$router.push({
+            name: item.routeName
+          })
+        } else {
+          this.$message.error('该功能正在开发中...')
+        }
       }
     },
     //....

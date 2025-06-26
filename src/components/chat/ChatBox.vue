@@ -23,13 +23,14 @@
                  v-else>
         <div class="header-title"
              @click="showFriendInfo"
-             v-if="isFriend">
+             v-show="isPrivate">
           <span>{{ title }}</span>
-          <span class="last-login">{{ showTime }}</span>
+          <span class="last-login"
+                v-show="showTime">{{ showTime }}</span>
         </div>
         <div class="header-title"
              @click="showFriendInfo"
-             v-if="isGroup">
+             v-show="isGroup">
           <span>{{ title }}</span>
           <span class="last-login">{{`${groupInfo.membersCount}位成员`}}</span>
           <span class="last-login">{{`${groupInfo.onlineCount}位在线`}}</span>
@@ -39,7 +40,7 @@
               class="btn-side el-icon-more"
               @click="onClickMore(1)"></span>
         <span title="用户消息"
-              v-if="isFriend"
+              v-if="isPrivate"
               class="btn-side el-icon-more"
               @click="onClickMore(2)"></span>
       </el-header>
@@ -845,7 +846,7 @@ export default {
     },
     deleteAllSbm () {
       let data = {
-        peerId: this.mine.id == this.deleteAllObj.sendId ? this.deleteAllObj.sendId : this.deleteAllObj.recvId,
+        peerId: this.chat.targetId,
         ids: [this.deleteAllObj.id],
         action: 'DELETE',
         deleteBoth: this.deleteAllCheck
@@ -857,6 +858,7 @@ export default {
       }).then(() => {
         this.chatStore.deleteMessage(this.deleteAllObj, this.chat);
         this.deleteAllObj = {}
+        this.deleteAllCheck = false
         this.$message.success('删除成功');
         this.deleteAllClose()
       });
@@ -1147,6 +1149,7 @@ export default {
       if (this.isGroup) {
         let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);
         return member ? member.headImage : "";
+        // return member.headImage;
       } else {
         return msgInfo.selfSend ? this.mine.headImageThumb : this.chat.headImage
       }
@@ -1187,7 +1190,7 @@ export default {
         console.log('processReqQueue', reqData);
 
         this.$http({
-          url: this.editMessage ? `/message/private/edit/1` : this.messageAction,
+          url: this.editMessage ? `/message/private/edit` : this.messageAction,
           method: this.editMessage ? 'put' : 'post',
           data: reqData.msgInfo
         }).then((res) => {
@@ -1233,6 +1236,8 @@ export default {
       return this.userInfo.online ? '在线' : this.$date.toTimeText(this.userInfo.lastLoginTime, true, true);
     },
     isFriend () {
+      console.log('isFriend', this.friendStore.isFriend(this.userInfo.id));
+
       return this.friendStore.isFriend(this.userInfo.id);
     },
     group () {
@@ -1261,6 +1266,7 @@ export default {
         (this.isGroup && this.group.isBanned)
     },
     isGroup () {
+      console.log('isGroup', this.chat.type == 'GROUP');
       return this.chat.type == 'GROUP';
     },
     isPrivate () {
@@ -1273,36 +1279,31 @@ export default {
   watch: {
     chat: {
       handler (newChat, oldChat) {
-        if (newChat.targetId > 0 && (!oldChat || newChat.type != oldChat.type ||
-          newChat.targetId != oldChat.targetId)) {
-          this.userInfo = {};
-          this.groupId = null;
-          this.groupMembers = [];
-          if (this.isGroup) {
-            this.loadGroup(this.chat.targetId);
-          } else {
-            this.loadFriend(this.chat.targetId);
-            // 加载已读状态
-            this.loadReaded(this.chat.targetId)
-          }
-          // 滚到底部
-          this.scrollToBottom();
-          this.showSide = false;
-          // 消息已读
-          this.readedMessage()
-          // 初始状态只显示30条消息
-          this.resetShowMessages();
-          // 重置输入框
-          this.resetEditor();
-          // 复位回执消息
-          this.isReceipt = false;
-          // 清空引用消息
-          this.quoteMessage = null;
-          // 清空编辑消息
-          this.editMessage = null;
-          // 更新placeholder
-          this.refreshPlaceHolder();
+        const isChanged = !oldChat ||
+          newChat.type !== oldChat.type ||
+          newChat.targetId !== oldChat.targetId;
+
+        // 非法会话不处理
+        if (!newChat?.targetId || !isChanged) return;
+
+        // 加载新会话相关信息
+        if (this.isGroup) {
+          this.loadGroup(newChat.targetId);
+        } else {
+          this.loadFriend(newChat.targetId);
+          this.loadReaded(newChat.targetId);
         }
+
+        // UI状态重置
+        this.scrollToBottom();
+        this.showSide = false;
+        this.readedMessage();
+        this.resetShowMessages();
+        this.resetEditor();
+        this.isReceipt = false;
+        this.quoteMessage = null;
+        this.editMessage = null;
+        this.refreshPlaceHolder();
       },
       immediate: true
     },

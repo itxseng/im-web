@@ -19,8 +19,7 @@
          :class="[{ 'message-mine': mine },selected ? 'mr' : '', isGroup ? '' : 'left-set']">
       <div class="avatar"
            v-if="isGroup">
-        <head-image :name="showName"
-                    :size="38"
+        <head-image :size="38"
                     :url="headImage"
                     :id="msgInfo.sendId"></head-image>
       </div>
@@ -326,13 +325,13 @@ export default {
           });
         }
       }
-      menuItems.push({
-        key: 'DELETE',
-        name: '删除消息'
-      });
+      // menuItems.push({
+      //   key: 'DELETE',
+      //   name: '删除消息'
+      // });
       menuItems.push({
         key: 'DELETEALL',
-        name: '删除远程消息'
+        name: '删除消息'
       });
       this.$refs.rightMenu.open(e, menuItems);
     },

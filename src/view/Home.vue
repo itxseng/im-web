@@ -209,6 +209,8 @@ export default {
       })
     },
     onReconnectWs () {
+      console.log(6666);
+      
       // 重连成功
 			this.reconnecting = false;
 			// 重新加载群和好友
@@ -289,6 +291,11 @@ export default {
       // 消息撤回
       if (msg.type == this.$enums.MESSAGE_TYPE.RECALL) {
         this.chatStore.recallMessage(msg, chatInfo)
+        return;
+      }
+      // 远端删除
+      if (msg.type == this.$enums.MESSAGE_TYPE.DELETE) { 
+        this.chatStore.remoteDeletionMessage(msg, chatInfo)
         return;
       }
       // 好友申请

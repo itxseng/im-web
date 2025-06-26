@@ -5,12 +5,15 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
 
-// ✅ 新增引入
+if (process.env.NODE_ENV !== 'production') {
+  global.__static = path.join(__dirname, '..', 'public')
+}
 import fs from 'fs'
 import os from 'os'
 import { get as httpGet } from 'http';
 import { get as httpsGet } from 'https';
 import { parse as parseUrl } from 'url';
+
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -208,8 +211,10 @@ ipcMain.on('show-floating-menu', (event, { x, y, items }) => {
   })
 
   // 加载静态菜单页面
-  menuWindow.loadFile(path.join(__dirname, '../public/menu.html'))
-
+  const menuPath = isDevelopment  ? path.join(__static, 'menu.html') // 开发环境下 __static 自动指向 public/
+    : path.join(__dirname, 'menu.html') // 打包后 menu.html 会在 app.asar 根下
+  menuWindow.loadFile(menuPath)
+  console.log('[__dirname]:', __dirname, menuPath);
   menuWindow.once('ready-to-show', () => {
     // 发送菜单项给子窗口
     menuWindow.webContents.send('set-menu-items', items)

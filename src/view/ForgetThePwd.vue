@@ -338,7 +338,7 @@ export default {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      padding: 10%;
+      padding: 0 10% 10% 10%;
       .web-ruleForm {
         height: 500px;
         width: 360px;

@@ -3,6 +3,9 @@ import axios from 'axios'
 import { Message } from 'element-ui'
 
 const http = axios.create({
+  // baseURL: process.env.VUE_APP_BASE_API,
+  baseURL: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_BASE_API : 'http://137.220.176.142:3000/api',
+  // baseURL: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_BASE_API : 'http://192.168.1.24:8888',
   baseURL: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_BASE_API : 'http://137.220.176.142:3000/api',
   // baseURL: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_BASE_API : 'http://192.168.1.24:8888',
   timeout: 1000 * 30

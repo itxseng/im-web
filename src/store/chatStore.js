@@ -216,7 +216,7 @@ export default defineStore('chatStore', {
       });
       this.saveToStorage()
     },
-    setDownload (id, messageId,type) {
+    setDownload (id, messageId, type) {
       let chats = this.findChats()
       chats.forEach(chat => {
         if (chat.targetId === id) {
@@ -457,6 +457,7 @@ export default defineStore('chatStore', {
       }
     },
     deleteMessage (msgInfo, chatInfo) {
+      console.log('deleteMessage', msgInfo, chatInfo);
       let chat = this.findChat(chatInfo);
       for (let idx in chat.messages) {
         // 已经发送成功的，根据id删除
@@ -472,6 +473,32 @@ export default defineStore('chatStore', {
       }
       chat.stored = false;
       this.saveToStorage()
+    },
+    remoteDeletionMessage (msgInfo, chatInfo) {
+      let chat = this.findChat(chatInfo);
+      const msgIds = new Set(msgInfo.msgIds); // 用 Set 提高查找效率
+      const messages = chat.messages;
+
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+
+        const isMatch =
+          (msg.id && msgIds.has(msg.id)) ||
+          (msg.tmpId && msgIds.has(msg.tmpId));
+
+        if (isMatch) {
+          // 先判断上一条是否 type === 20，如果是，先删除它
+          if (i > 0 && messages[i - 1].type === 20) {
+            messages.splice(i - 1, 1); // 删除上一条
+            i--; // 索引前移，避免跳过下一个元素
+          }
+
+          messages.splice(i, 1); // 删除当前消息
+        }
+      }
+
+      chat.stored = false;
+      this.saveToStorage();
     },
     recallMessage (msgInfo, chatInfo) {
       let chat = this.findChat(chatInfo);

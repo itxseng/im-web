@@ -74,10 +74,12 @@
           </a>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item>
-              <router-link to="/register">注册账号</router-link>
+              <div @click="goTo('register')"
+                   class="dropdown-item">注册账号</div>
             </el-dropdown-item>
             <el-dropdown-item>
-              <router-link to="/forgetThePwd">忘记密码</router-link>
+              <div @click="goTo('forgetThePwd')"
+                   class="dropdown-item">忘记密码</div>
             </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
@@ -129,6 +131,9 @@ export default {
     }
   },
   methods: {
+    goTo (router) {
+      this.$router.push(router);
+    },
     cut (type) {
       this.$emit('cut', type)
     },
@@ -376,12 +381,19 @@ export default {
     }
   }
   .el-dropdown-menu__item {
+    padding: 0px !important;
     a {
       color: #3066ec !important;
       // 取消下划线
       text-decoration: none;
       cursor: pointer;
     }
+  }
+  .dropdown-item {
+    width: 100%;
+    height: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
   }
   @keyframes shake {
     10%,

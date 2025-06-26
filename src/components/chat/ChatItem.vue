@@ -29,7 +29,7 @@
           <div class="chat-send-name"
                v-show="isShowSendName">{{ chat.sendNickName + ':&nbsp;' }}</div>
           <div class="chat-content-text"
-               v-html="$emo.transform(chat.lastContent, 'emoji-small')"></div>
+               v-html="content"></div>
           <div v-show="chat.unreadCount > 0"
                :class="['unread-text',chat.notifyExpireTs > 0 ? 'unread-text-color' : '']">{{ chat.unreadCount }}</div>
           <ChatItemIcon class="chat-item-icon"
@@ -172,6 +172,39 @@ export default {
     }
   },
   computed: {
+    content () {
+      if (this.chat.messages.length == 0) {
+        return "";
+      }
+      let msg = this.chat.messages[this.chat.messages.length - 1];
+      let content = "不支持的消息类型"
+      if (msg.type == this.$enums.MESSAGE_TYPE.IMAGE) {
+        content = "[图片]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.VIDEO) {
+        content = "[视频]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.FILE) {
+        content = "[文件]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.AUDIO) {
+        content = "[语音]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.USER_CARD) {
+        content = "[个人名片] " + JSON.parse(msg.content).nickName;
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_CARD) {
+        content = "[群名片] " + JSON.parse(msg.content).groupName;
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.FORWARD) {
+        content = "[转发消息]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.ACT_RT_VOICE) {
+        content = "[语音通话]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.ACT_RT_VIDEO) {
+        content = "[视频通话]";
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.SYSTEM_MESSAGE) {
+        content = msg.title;
+      } else if (msg.type == this.$enums.MESSAGE_TYPE.TEXT ||
+        msg.type == this.$enums.MESSAGE_TYPE.RECALL ||
+        msg.type == this.$enums.MESSAGE_TYPE.TIP_TEXT) {
+        content = msg.content;
+      }
+      return content;
+    },
     isShowSendName () {
       if (!this.chat.sendNickName) {
         return false;
@@ -201,7 +234,8 @@ export default {
 
 <style lang="scss" scoped>
   .chat-item {
-    height: 50px;
+    width: 100%;
+    height: 60px;
     display: flex;
     position: relative;
     padding: 5px 10px;
@@ -209,6 +243,7 @@ export default {
     background-color: #fff;
     white-space: nowrap;
     cursor: pointer;
+    box-sizing: border-box;
     &:hover {
       background-color: var(--im-background-active);
     }
@@ -287,6 +322,7 @@ export default {
       }
 
       .chat-content {
+        width: 100%;
         display: flex;
         line-height: 22px;
         position: relative;

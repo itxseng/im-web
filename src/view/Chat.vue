@@ -42,7 +42,7 @@
       <el-scrollbar class="chat-list-items"
                     v-else>
         <div v-for="(chat, index) in chatStore.chats"
-             :key="index">
+             :key="index" >
           <chat-item v-if="!chat.delete && chat.showName.includes(searchText)"
                      :chat="chat"
                      :index="index"
@@ -117,6 +117,8 @@ export default {
       this.showAddFriend = false;
     },
     onActiveItem (item, index) {
+      console.log(item);
+      
       this.isShow = index
       this.chatStore.setActiveChat(item.targetId);
     },
@@ -226,6 +228,7 @@ export default {
 
       .chat-list-items {
         flex: 1;
+        width: 100%;
       }
     }
     .chat-box {

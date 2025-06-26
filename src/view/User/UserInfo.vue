@@ -184,6 +184,12 @@ export default {
           return
         }
       }
+      if (title === '邮箱') {
+        if (this.userInfoForm.phone) {
+          this.$message.error('你已绑定邮箱！')
+          return
+        }
+      }
       this.itemValue = value
       this.drawerTitle = title
       this.$nextTick(() => {
@@ -257,7 +263,7 @@ export default {
       padding: 20px;
       .content-info {
         width: 100%;
-        height: 150px;
+        height: 130px;
         padding: 20px;
         box-sizing: border-box;
         background-color: #fff;

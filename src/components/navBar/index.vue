@@ -10,8 +10,8 @@
       <div class="linkman-tip"
            v-if="linkmanTip">{{linkmanTip}}</div>
     </div>
-    <div :class="[routerPath === '/home/group' ? 'user-click' : 'user']"
-         @click="goToRoute('/home/group')"></div>
+    <!-- <div :class="[routerPath === '/home/group' ? 'user-click' : 'user']"
+         @click="goToRoute('/home/group')"></div> -->
     <div :class="[routerPath === '/home/user' ? 'user-click' : 'user']"
          @click="goToRoute('/home/user')"></div>
   </div>
