@@ -525,6 +525,7 @@ export default {
           .message-text {
             display: inline-block;
             position: relative;
+            max-width: 100%;
             line-height: 26px;
             padding: 6px 15px 6px 15px;
             background: white;
@@ -771,13 +772,14 @@ export default {
             flex-direction: row-reverse;
           }
 
-          .bottom {
-            padding-left: 170px;
-            padding-right: 5px;
-            .message-text {
-              background-color: #3066ec;
-              margin-left: 10px;
-              color: #fff;
+        .bottom {
+          padding-left: 170px;
+          padding-right: 5px;
+          .message-text {
+            background-color: #3066ec;
+            margin-left: 10px;
+            color: #fff;
+            max-width: 100%;
 
               &:after {
                 left: auto;

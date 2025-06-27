@@ -1,6 +1,6 @@
 <template>
   <el-container class="chat-page">
-    <el-aside width="30%"
+    <el-aside width="300px"
               class="chat-list-box">
       <div class="chat-list-header">
         <el-input class="search-text"
@@ -204,6 +204,8 @@ export default {
       display: flex;
       flex-direction: column;
       background: #fff;
+      flex: 0 0 300px;
+      width: 300px;
 
       .chat-list-header {
         height: 32px;
@@ -260,7 +262,7 @@ export default {
       }
     }
     .chat-box {
-      width: 70%;
+      flex: 1;
       background: linear-gradient(
         270deg,
         #ffffff 0%,
