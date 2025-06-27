@@ -126,6 +126,16 @@ export default defineStore('chatStore', {
       this.activeChat = arr;
       this.saveToStorage();
     },
+    setUnreadCount (id) {
+      let chats = this.findChats()
+      chats.forEach(chat => {
+        if (chat.targetId == id && chat.unreadCount === 0) {
+          chat.unreadCount += 1;
+          chat.stored = false;
+        }
+      });
+      this.saveToStorage();
+    },
     resetUnreadCount (chatInfo) {
       let chats = this.findChats()
       for (let idx in chats) {

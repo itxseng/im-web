@@ -47,12 +47,13 @@
                      :chat="chat"
                      :index="index"
                      @click.native="onActiveItem(chat,index)"
-                     @delete="onDelItem(index)"
-                     @top="onTop(index)"
+                     @delete="onDelItem(chat)"
+                     @top="onTop(chat)"
                      @info="onShowInfo(chat)"
-                     @unpinfromtop="unpinFromTop(index)"
+                     @unpinfromtop="unpinFromTop(chat)"
+                     @biaoweiweidu="setUnread"
                      @heimingdan="blacklist"
-                     @chakangerenxinxi="showFriendInfo"
+                     @chakangerenxinxi="showFriendInfo(chat)"
                      :active="chat === chatStore.activeChat"></chat-item>
         </div>
       </el-scrollbar>
@@ -115,7 +116,7 @@ export default {
       selectMessageList: [],
       dialogType: '',
       commonGroupList: [],
-      showUserInfo:false
+      showUserInfo: false
     }
   },
   methods: {
@@ -133,11 +134,13 @@ export default {
       this.isShow = index
       this.chatStore.setActiveChat(item.targetId);
     },
-    onDelItem (index) {
-      this.chatStore.removeChat(index);
+    onDelItem (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.removeChat(idx);
     },
-    onTop (chatIdx) {
-      this.chatStore.moveTop(chatIdx);
+    onTop (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.moveTop(idx);
     },
     onShowInfo (chat) {
       if (chat.type == 'PRIVATE') {
@@ -150,8 +153,9 @@ export default {
         this.$router.push("/home/group?id=" + chat.targetId);
       }
     },
-    unpinFromTop (chatIdx) {
-      this.chatStore.unpinFromTop(chatIdx)
+    unpinFromTop (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.unpinFromTop(idx)
     },
     // 添加黑名单
     blacklist (item) {
@@ -176,6 +180,10 @@ export default {
       })
       this.chatStore.setActiveChat(item.targetId);
       this.showUserInfo = true
+    },
+    // 设置未读表示
+    setUnread (item) {
+      this.chatStore.setUnreadCount(item.targetId);
     }
   },
   computed: {

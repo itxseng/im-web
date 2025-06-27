@@ -98,7 +98,8 @@ export default {
   data () {
     return {
       pos: { x: 0, y: 0 },
-      items: []
+      items: [],
+      removeMenuCmd: null
     }
   },
   methods: {
@@ -106,17 +107,35 @@ export default {
       console.log(pos, items);
       this.pos = pos
       this.items = items
+      // 确保旧监听器被移除
+      if (this.removeMenuCmd) {
+        this.removeMenuCmd()
+        this.removeMenuCmd = null
+      }
+
+      // 监听一次菜单命令，执行后立即移除
+      this.removeMenuCmd = window.electronAPI.onMenuCommand((cmd) => {
+        const selected = this.items.find(i => i.key === cmd)
+        if (selected) {
+          this.$emit('select', selected)
+        }
+        this.removeMenuCmd && this.removeMenuCmd()
+        this.removeMenuCmd = null
+      })
       window.electronAPI.showFloatingMenu({ x: pos.screenX, y: pos.screenY, items })
     },
   },
-  mounted () {
-    // 监听子窗口选择命令并转发出来
-    window.electronAPI.onMenuCommand((cmd) => {
-      const selected = this.items.find(i => i.key === cmd)
-      if (selected) {
-        this.$emit('select', selected)
-      }
-    })
+  // mounted () {
+  //   // 监听子窗口选择命令并转发出来
+  //   this._removeMenuCommand = window.electronAPI.onMenuCommand((cmd) => {
+  //     const selected = this.items.find(i => i.key === cmd)
+  //     if (selected) {
+  //       this.$emit('select', selected)
+  //     }
+  //   })
+  // },
+  beforeDestroy () {
+    this.removeMenuCmd && this.removeMenuCmd()
   }
 }
 </script>

@@ -164,8 +164,7 @@ export default {
       }
     },
     onSelectMenu (item) {
-      console.log(item.key.toLowerCase());
-      if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI') {
+      if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI' || item.key === 'BIAOWEIWEIDU') {
         this.$emit(item.key.toLowerCase(), this.chat);
       } else {
         this.$emit(item.key.toLowerCase(), this.msgInfo);
