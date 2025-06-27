@@ -952,34 +952,41 @@ export default {
     },
     // 转发按钮
     messageTranspond () {
-      let msgInfo = this.selectMessageList[0]
+      if (!this.selectMessageList.length) {
+        return
+      }
+      const msgs = this.selectMessageList
       this.$refs.chatSel.open(chats => {
-        // 逐个会话发送消息
-        let idx = 0;
+        // 需要发送的总次数 = 选择的会话数 * 消息数
+        let finish = 0
+        const total = chats.length * msgs.length
         chats.forEach(chat => {
-          let message = {
-            content: msgInfo.content,
-            type: msgInfo.type
-          }
-          if (chat.type == 'GROUP') {
-            message.groupId = chat.targetId
-          } else {
-            message.recvId = chat.targetId;
-          }
-          this.$http({
-            url: `/message/${chat.type.toLowerCase()}/send`,
-            method: 'post',
-            data: message
-          }).then((m) => {
-            m.selfSend = true;
-            this.chatStore.openChat(chat);
-            this.chatStore.insertMessage(m, chat);
-            if (++idx == chats.length) {
-              this.$message.success("转发成功")
+          msgs.forEach(msgInfo => {
+            const message = {
+              content: JSON.stringify(msgInfo),
+              type: this.$enums.MESSAGE_TYPE.FORWARD
             }
+            if (chat.type == 'GROUP') {
+              message.groupId = chat.targetId
+            } else {
+              message.recvId = chat.targetId
+            }
+            this.$http({
+              url: `/message/${chat.type.toLowerCase()}/send`,
+              method: 'post',
+              data: message
+            }).then((m) => {
+              m.selfSend = true
+              this.chatStore.openChat(chat)
+              this.chatStore.insertMessage(m, chat)
+              if (++finish === total) {
+                this.$message.success('转发成功')
+                this.onCloseSelected()
+              }
+            })
           })
         })
-      });
+      })
     },
     // 撤回消息
     onRecallMessage (msgInfo) {
