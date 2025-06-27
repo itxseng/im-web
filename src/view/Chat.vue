@@ -43,7 +43,7 @@
                     v-else>
         <div v-for="(chat, index) in chatStore.chats"
              :key="index">
-          <chat-item v-if="!chat.delete && chat.showName.includes(searchText)"
+          <chat-item v-if="!chat.delete && (chat.showName || '').includes(searchText)"
                      :chat="chat"
                      :index="index"
                      @click.native="onActiveItem(chat,index)"

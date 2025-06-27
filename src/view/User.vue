@@ -21,7 +21,7 @@
           </div>
           <div class="user-list-info-text">
             <span class="user-list-info-text-name">{{ userInfo.nickName }}</span>
-            <span>ID:{{ userInfo.id }}</span>
+            <span>ID:{{ userInfo.userName }}</span>
           </div>
         </li>
         <div class="li-box"

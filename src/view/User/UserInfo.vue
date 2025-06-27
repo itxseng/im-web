@@ -31,7 +31,7 @@
           </div>
           <div class="content-info-text-id">
             <span>ID</span>
-            <el-input v-model="userInfoForm.id"
+            <el-input v-model="userInfoForm.userName"
                       :disabled="true"></el-input>
           </div>
         </div>
@@ -219,6 +219,7 @@ export default {
       this.userInfoForm.birthday = this.userInfo.birthday
       this.userInfoForm.country = this.userInfo.country
       this.userInfoForm.email = this.userInfo.email
+      this.userInfoForm.userName = this.userInfo.userName
     }
   },
   mounted () {
