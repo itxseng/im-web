@@ -1,10 +1,10 @@
 /* 改变 icon 字体路径变量，必需 */
-$--font-path: '~element-ui/lib/theme-chalk/fonts';
+$--font-path: '~element-plus/dist/fonts';
 
 // 文字
 $--font-family: Microsoft YaHei, 'Avenir', Helvetica, Arial, sans-serif;
 @import "thems";
-@import "~element-ui/packages/theme-chalk/src/index";
+@use "element-plus/theme-chalk/src/index" as *;
 
 .el-message {
   z-index: 99999999 !important;
