@@ -1,3 +1,9 @@
-import Vue from 'vue';
+import mitt from 'mitt'
 
-export default new Vue();
+const emitter = mitt()
+
+export default {
+  $on: emitter.on,
+  $off: emitter.off,
+  $emit: emitter.emit
+}

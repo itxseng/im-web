@@ -45,7 +45,6 @@ export default {
   },
   computed: {
     groups () {
-      console.log('获取我的群聊', this.groupStore.groups);
 
       return this.groupStore.groups;
     }

@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-dialogDrag
              :title="title"
-             :visible.sync="show"
+             v-model="show"
              :append-to-body="appendToBody ?  true : false"
              width="700px">
     <div class="chat-selector">
@@ -35,7 +35,7 @@
               </div>
               <el-checkbox v-model="item.checked"
                            class="check-box"
-                           @click.native.stop=""
+                           @click.stop=""
                            @change="onChatChange(item)"></el-checkbox>
             </div>
           </template>
@@ -47,10 +47,10 @@
             <friend-item :menu="false"
                          :friend="item"
                          size="small"
-                         @click.native="onClickFriendItem(item)">
+                         @click="onClickFriendItem(item)">
               <el-checkbox v-model="item.checked"
                            class="check-box"
-                           @click.native.stop=""
+                           @click.stop=""
                            @change="onFriendChange(item)"></el-checkbox>
             </friend-item>
           </template>
@@ -62,10 +62,10 @@
             <group-item :group="item"
                         :menu="false"
                         size="small"
-                        @click.native="onClickGroupItem(item)">
+                        @click="onClickGroupItem(item)">
               <el-checkbox v-model="item.checked"
                            class="check-box"
-                           @click.native.stop=""
+                           @click.stop=""
                            @change="onGroupChange(item)"></el-checkbox>
             </group-item>
           </template>
@@ -91,12 +91,13 @@
         </el-scrollbar>
       </div>
     </div>
-    <span slot="footer"
-          class="dialog-footer">
+    <template #footer>
+    <span class="dialog-footer">
       <el-button @click="close()">取 消</el-button>
       <el-button type="primary"
                  @click="ok()">发 送</el-button>
     </span>
+    </template>
   </el-dialog>
 </template>
 <script>

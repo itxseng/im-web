@@ -13,7 +13,7 @@
           <div v-for="group in groups" :key="group.id">
             <group-item :id="group.id" :group="group" :active="group.id == activeGroup.id" @chat="onSendMessage(group)"
               @quit="onQuit(group)" @dissolve="onDissolve(group)" @card="onSendCard(group)"
-              @click.native="onActiveItem(group)">
+              @click="onActiveItem(group)">
             </group-item>
           </div>
           <div v-if="i < groupValues.length - 1" class="divider"></div>

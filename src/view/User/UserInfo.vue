@@ -108,7 +108,7 @@
     </div>
     <el-drawer size="70%"
                :with-header="false"
-               :visible.sync="drawer"
+               v-model="drawer"
                direction="rtl"
                :modal="false"
                :before-close="drawerClose">

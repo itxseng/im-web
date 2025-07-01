@@ -52,18 +52,19 @@
       </div>
     </el-container>
     <el-dialog title="退出登录"
-               :visible.sync="quitModal"
+               v-model="quitModal"
                width="360px"
                :before-close="handleClose">
       <div class="quit-modal">
         <span>你确定要退出当前账号吗？</span>
       </div>
-      <span slot="footer"
-            class="dialog-footer">
+      <template #footer>
+      <span class="dialog-footer">
         <el-button @click="quitModalClose">取 消</el-button>
         <el-button type="primary"
                    @click="quitModalConfirm">确 定</el-button>
       </span>
+      </template>
     </el-dialog>
   </el-container>
 </template>

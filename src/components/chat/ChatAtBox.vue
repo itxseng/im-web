@@ -2,8 +2,8 @@
 	<el-scrollbar v-show="show && showMembers.length" ref="scrollBox" class="group-member-choose"
 		:style="{ 'left': pos.x + 'px', 'top': pos.y - 300 + 'px' }">
 		<div v-for="(member, idx) in showMembers" :key="member.id">
-			<group-member-item :group="group" :groupMembers="members" :member="member" :height="40"
-				:active='activeIdx == idx' :menu="false" @click.native="onSelectMember(member)"></group-member-item>
+                        <group-member-item :group="group" :groupMembers="members" :member="member" :height="40"
+                                :active='activeIdx == idx' :menu="false" @click="onSelectMember(member)"></group-member-item>
 		</div>
 	</el-scrollbar>
 </template>

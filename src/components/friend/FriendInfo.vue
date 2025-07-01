@@ -108,7 +108,7 @@
       </ul>
     </div>
     <el-dialog append-to-body
-               :visible.sync="editRemarkModal"
+               v-model="editRemarkModal"
                width="25%"
                :before-close="handleClose">
       <div class="edit-remark-modal-content">
@@ -116,11 +116,12 @@
         <el-input v-model="editRemarkValue"
                   clearable
                   placeholder="请输入备注"
-                  @keyup.enter.native="editRemarkSubmit"></el-input>
+                  @keyup.enter="editRemarkSubmit"></el-input>
       </div>
-      <span slot="footer"
-            class="dialog-footer">
+      <template #footer>
+      <span class="dialog-footer">
       </span>
+      </template>
     </el-dialog>
     <div class="popover-box"
          v-if="popoverShow"
@@ -234,8 +235,6 @@ export default {
   methods: {
     // 语音、视频
     showPrivateVideo (mode) {
-      console.log("showPrivateVideo", mode);
-
       if (!this.isFriend) {
         this.$message.error("你已不是对方好友,无法呼叫");
         return
@@ -389,7 +388,6 @@ export default {
     },
     //分享名片
     onSendCard () {
-      console.log("cardData", this.friend, this.userInfo);
       this.$refs.chatSel.open(chats => {
         let idx = 0;
         chats.forEach(chat => {

@@ -2,8 +2,8 @@
 	<div v-if="show" class="user-info" :style="{ left: pos.x + 'px', top: pos.y + 'px' }" @click.stop>
 		<div class="container">
 			<div class="avatar">
-				<head-image :name="user.nickName" :url="user.headImageThumb" :size="60" :online="user.online"
-					@click.native="showFullImage()" radius="10%"> </head-image>
+                                <head-image :name="user.nickName" :url="user.headImageThumb" :size="60" :online="user.online"
+                                        @click="showFullImage()" radius="10%"> </head-image>
 			</div>
 			<div class="info-card">
 				<div class="header">

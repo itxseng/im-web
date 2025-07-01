@@ -131,7 +131,7 @@
                v-if="msgInfo.quoteMessage"
                @contextmenu.prevent.stop="showQuoteMenu($event)">
             <chat-quote-message :msgInfo="msgInfo.quoteMessage"
-                                @click.native.stop="$emit('locateQuote', msgInfo)"
+                                @click.stop="$emit('locateQuote', msgInfo)"
                                 :showName="quoteShowName"></chat-quote-message>
           </div>
           <!-- <div class="message-time">{{ filtrationTime(msgInfo.sendTime) }}</div> -->

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { Message } from 'element-ui'
+import { ElMessage } from 'element-plus'
 
 const http = axios.create({
   // baseURL: process.env.VUE_APP_BASE_API,
@@ -52,7 +52,7 @@ http.interceptors.response.use(async response => {
     // 重新发送刚才的请求
     return http(response.config)
   } else {
-    Message({
+    ElMessage({
       message: response.data.message,
       type: 'error',
       duration: 1500,
@@ -63,7 +63,7 @@ http.interceptors.response.use(async response => {
 }, error => {
   switch (error.response.status) {
     case 400:
-      Message({
+      ElMessage({
         message: error.response.data,
         type: 'error',
         duration: 1500,
@@ -74,7 +74,7 @@ http.interceptors.response.use(async response => {
       location.href = "/";
       break
     case 405:
-      Message({
+      ElMessage({
         message: 'http请求方式有误',
         type: 'error',
         duration: 1500,
@@ -83,7 +83,7 @@ http.interceptors.response.use(async response => {
       break
     case 404:
     case 500:
-      Message({
+      ElMessage({
         message: '服务器出了点小差，请稍后再试',
         type: 'error',
         duration: 1500,
@@ -91,7 +91,7 @@ http.interceptors.response.use(async response => {
       })
       break
     case 501:
-      Message({
+      ElMessage({
         message: '服务器不支持当前请求所需要的某个功能',
         type: 'error',
         duration: 1500,
