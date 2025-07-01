@@ -285,9 +285,7 @@ export default {
 			return this.chat.messages.filter(m => m.type == type);
 		},
 		messages() {
-      console.log([this.tabName + 'Message']);
-      
-			return this[this.tabName + 'Message'].filter(m => {
+      return this[this.tabName + 'Message'].filter(m => {
 				if (!this.searchText) {
 					return true;
 				}
@@ -304,9 +302,7 @@ export default {
 			});
 		},
 		showMessages() {
-      console.log(this.messages.slice(this.showMinIdx));
-      
-			return this.messages.slice(this.showMinIdx);
+      return this.messages.slice(this.showMinIdx);
 		},
 		messageSize() {
 			return this.isShow ? this.messages.length : 0;
