@@ -72,7 +72,7 @@ export default {
           name: '查看个人信息',
           icon: 'el-icon-delete'
         }, {
-          key: 'GUANBIXIAOXITONGZHI',
+          key: 'XIAOXITONGZHI',
           name: '关闭消息通知',
           icon: 'el-icon-delete'
         }, {
@@ -131,6 +131,21 @@ export default {
           }
         })
       }
+      if (chat.notifyExpireTs) {
+        this.menuItems.forEach(item => {
+          if (item.key === 'XIAOXITONGZHI') {
+            item.name = '开启消息通知'
+            item.icon = 'el-icon-remove-outline'
+          }
+        })
+      } else {
+        this.menuItems.forEach(item => {
+          if (item.key === 'XIAOXITONGZHI') {
+            item.name = '关闭消息通知'
+            item.icon = 'el-icon-circle-plus-outline'
+          }
+        })
+      }
       if (chat.top) {
         let obj = {
           key: 'UNPINFROMTOP',
@@ -164,11 +179,14 @@ export default {
       }
     },
     onSelectMenu (item) {
-      if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI' || item.key === 'BIAOWEIWEIDU') {
-        this.$emit(item.key.toLowerCase(), this.chat);
-      } else {
-        this.$emit(item.key.toLowerCase(), this.msgInfo);
-      }
+      console.log(item.key.toLowerCase());
+      this.$emit(item.key.toLowerCase(), this.chat);
+      
+      // if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI' || item.key === 'BIAOWEIWEIDU' || item.key === 'QINGCHU') {
+      // } 
+      // else {
+      //   this.$emit(item.key.toLowerCase(), this.msgInfo);
+      // }
     }
   },
   computed: {

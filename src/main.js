@@ -19,7 +19,6 @@ import useFriendStore from './store/friendStore.js'
 import useGroupStore from './store/groupStore.js'
 import useUserStore from './store/userStore.js'
 import useConfigStore from './store/configStore.js'
-
 Vue.use(ElementUI);
 Vue.use(PiniaVuePlugin)
 const pinia = createPinia()
@@ -34,7 +33,6 @@ Vue.prototype.$elm = element; // 元素操作
 Vue.prototype.$enums = enums; // 枚举
 Vue.prototype.$eventBus = new Vue(); // 全局事件
 Vue.config.productionTip = false;
-
 new Vue({
   el: '#app',
   // 配置路由

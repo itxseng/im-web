@@ -1,7 +1,6 @@
 import { MESSAGE_TYPE, MESSAGE_STATUS } from "../api/enums.js"
 import { defineStore } from 'pinia';
 import useUserStore from './userStore.js';
-import friendStore from './friendStore.js';
 import localForage from '../utils/electronForage.js';
 import http from '../api/httpRequest.js'
 
@@ -32,10 +31,14 @@ export default defineStore('chatStore', {
       loadingPrivateMsg: false,
       loadingGroupMsg: false,
       loadingSystemMsg: false,
-      chats: []
+      chats: [],
+      chatLoading: false
     }
   },
   actions: {
+    setChatLoading (type) {
+      this.chatLoading = type;
+    },
     initChats (chatsData) {
       this.chats = [];
       this.privateMsgMaxId = chatsData.privateMsgMaxId || 0;
@@ -240,12 +243,28 @@ export default defineStore('chatStore', {
       });
       this.saveToStorage()
     },
+    // 删除对话
     removeChat (idx) {
       let chats = this.findChats()
       if (chats[idx] == this.activeChat) {
         this.activeChat = null;
       }
       chats[idx].delete = true;
+      chats[idx].stored = false;
+      this.saveToStorage()
+    },
+    // 删除聊天记录
+    removeRecord (idx) {
+      let chats = this.findChats()
+      chats[idx].messages = [];
+      const userStore = useUserStore();
+      let userId = userStore.userInfo.id;
+      let key = "chats-" + userId;
+      let chatKey = `${key}-${chats[idx].type}-${chats[idx].targetId}`
+      this.setChatLoading(true)
+      localForage.removeItem(chatKey).then(() => {
+        this.setChatLoading(false)
+      });
       chats[idx].stored = false;
       this.saveToStorage()
     },

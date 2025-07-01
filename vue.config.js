@@ -18,6 +18,10 @@ module.exports = {
           icon: 'public/logo.ico',
           // 打包权限 asInvoker | highestAvailable
           requestedExecutionLevel: 'highestAvailable'
+        },
+        nsis: {
+          oneClick: false,
+          allowToChangeInstallationDirectory: true
         }
       }
     }

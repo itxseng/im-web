@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, shell, Tray, Menu } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
@@ -21,6 +21,8 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow  // 用于发送进度
 let menuWindow  // 用于右键浮动菜单
+let tray
+let isQuitting = false
 
 // —— 持久化存储 —— //
 const storeFile = path.join(app.getPath('userData'), 'store.json');
@@ -51,6 +53,23 @@ ipcMain.on('store-remove', (event, key) => {
   event.returnValue = true;
 });
 
+function createTray() {
+  if (tray) return
+  const iconName = process.platform === 'win32' ? 'logo.ico' : 'logo.png'
+  const iconPath = isDevelopment
+      ? path.join(__static, iconName)
+      : path.join(__dirname, iconName)
+  tray = new Tray(iconPath)
+  const menu = Menu.buildFromTemplate([
+    { label: '显示', click: () => { mainWindow && mainWindow.show() } },
+    { label: '退出', click: () => { isQuitting = true; app.quit() } }
+  ])
+  tray.setToolTip('NEW-IM')
+  tray.setContextMenu(menu)
+  tray.on('click', () => { mainWindow && mainWindow.show() })
+}
+
+
 async function createWindow () {
   const win = new BrowserWindow({
     width: 450,
@@ -66,6 +85,17 @@ async function createWindow () {
   })
 
   mainWindow = win // 保存引用用于后续发送事件
+
+  createTray()
+
+  app.on('before-quit', () => { isQuitting = true })
+
+  win.on('close', (e) => {
+    if (!isQuitting) {
+      e.preventDefault()
+      win.hide()
+    }
+  })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -84,7 +114,9 @@ async function createWindow () {
       win.isMaximized() ? 'window-is-maximized' : 'window-is-restored'
     )
   })
-  ipcMain.on('window-close', () => win.close())
+  ipcMain.on('window-close', () => {
+    win.hide()
+  })
   ipcMain.on('window-resize', (event, { width, height }) => {
     if (win && !win.isDestroyed()) {
       win.setSize(parseInt(width, 10), parseInt(height, 10), true)

@@ -1,20 +1,23 @@
 <template>
-  <div class="chat-forward-message">
+  <div class="chat-forward-message"
+       v-if="friendInfo">
     <div>
       <div class="message-text"
            v-if="content.type == $enums.MESSAGE_TYPE.TEXT"
            v-html="htmlText">
       </div>
-      <div class="message-image"
+      <div :class="['message-image',contentData.selfSend ? 'right-bg' : 'left-bg']"
            v-if="content.type == $enums.MESSAGE_TYPE.IMAGE">
         <div class="message-image-tip"
              v-html="forwardTip"></div>
-        <img class="send-image"
-             :src="JSON.parse(content.content).originUrl"
-             @click="showFullImageBox()"
-             loading="lazy" />
+        <div class="message-image-img">
+          <img class="send-image"
+               :src="JSON.parse(content.content).originUrl"
+               @click="showFullImageBox()"
+               loading="lazy" />
+        </div>
       </div>
-      <div class="message-video"
+      <div :class="['message-video',contentData.selfSend ? 'right-bg' : 'left-bg']"
            v-if="content.type == $enums.MESSAGE_TYPE.VIDEO">
         <div class="message-image-tip"
              v-html="forwardTip"></div>
@@ -24,24 +27,24 @@
                :poster="JSON.parse(content.content).coverUrl"
                :src="JSON.parse(content.content).videoUrl" />
       </div>
-      <div class="message-file"
+      <div :class="['message-file',contentData.selfSend ? 'right-bg' : 'left-bg']"
            v-if="content.type == $enums.MESSAGE_TYPE.FILE">
         <div class="message-image-tip"
              v-html="forwardTip"></div>
         <div class="file-box">
           <div class="file-info">
-            <el-link class="file-name"
-                     :underline="true"
-                     target="_blank"
-                     type="primary"
-                     :href="JSON.parse(content.content).url.originUrl"
-                     :download="JSON.parse(content.content).name">{{ JSON.parse(content.content).name
-										}}</el-link>
-            <div class="file-size">{{ fileSize(JSON.parse(content.content).size)}}</div>
-          </div>
-          <div class="file-icon">
-            <span type="primary"
-                  class="el-icon-document"></span>
+            <div class="file-icon">
+              <downloadFile :msgInfo="content"
+                            :chat="chat"
+                            :id="content.id" />
+            </div>
+            <div class="file-text">
+              <p class="file-text-name">{{ JSON.parse(content.content).name}}</p>
+              <div class="file-size">
+                <span>{{ fileSize(JSON.parse(content.content).size) }}</span>
+                <span>{{filtrationTime(content.sendTime)}}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -49,12 +52,18 @@
   </div>
 </template>
 <script>
+import downloadFile from '@/components/common/downloadFile'
 export default {
+  components: {
+    downloadFile
+  },
   name: "ChatForwardMessage",
   props: {
     cardInfo: {
       type: Object
-    }
+    },
+    chat: { type: Object, default: () => { } },
+    groupMembers: { type: Array, default: () => [] },
   },
   data () {
     return {}
@@ -75,36 +84,41 @@ export default {
         return Math.round(size / 1024) + "KB";
       }
       return size + "B";
-    }
+    },
+    filtrationTime (time) {
+      console.log(time);
+
+      const date = new Date(time);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+
+      return `${hours}:${minutes}:${seconds}`;
+    },
   },
   computed: {
-    content () {
-      console.log(this.cardInfo);
-
+    contentData () {
       return this.cardInfo
+    },
+    content () {
+      return JSON.parse(this.cardInfo.content)
     },
     userInfo () {
       return this.userStore.userInfo;
     },
     friendInfo () {
-      if (this.content.sendId === this.userInfo.id) {
-        return this.userInfo
-      } else {
-        return this.friendStore.findFriend(this.content.sendId);
-      }
+      return this.friendStore.findFriend(this.content.sendId) ? this.friendStore.findFriend(this.content.sendId) : this.groupMembers.find((f) => f.userId == this.content.sendId);
     },
     forwardTip () {
-      let html = `<div style="display: flex;justify-content: flex-start;align-items: center;">转发自用户<img style="width: 30px;height: 30px;border-radius: 15px;margin:0 3px;" src="${this.friendInfo.headImage}" />${this.friendInfo.nickName}</div>`
+      let html = `<div style="display: flex;justify-content: flex-start;align-items: center;">转发自用户<img style="width: 30px;height: 30px;border-radius: 15px;margin:0 3px;" src="${this.friendInfo.headImage}" />${this.friendInfo.showNickName}</div>`
       return html
     },
     htmlText () {
-      let text = this.$url.replaceURLWithHTMLLinks(this.cardInfo.content)
+      let text = this.$url.replaceURLWithHTMLLinks(this.content.content)
       let html = `${this.forwardTip}<div>${text}</div>`
       return this.$emo.transform(html, 'emoji-normal')
     }
-  },
-
-
+  }
 }
 </script>
 <style scoped lang="scss">
@@ -134,6 +148,17 @@ export default {
     padding: 10px;
     .message-image-tip {
       padding-left: 5px;
+    }
+    .message-image-img {
+      width: 100%;
+      height: calc(100% - 20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      img {
+        width: calc(100% - 5px);
+        height: 100%;
+      }
     }
   }
   .message-video {
@@ -166,5 +191,14 @@ export default {
     .file-box {
       background-color: white;
     }
+  }
+  .left-bg {
+    background-color: white;
+    .message-image-tip {
+      color: #000 !important;
+    }
+  }
+  .right-bg {
+    background-color: #3066ec;
   }
 </style>
