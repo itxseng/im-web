@@ -235,8 +235,6 @@ export default {
   methods: {
     // 语音、视频
     showPrivateVideo (mode) {
-      console.log("showPrivateVideo", mode);
-
       if (!this.isFriend) {
         this.$message.error("你已不是对方好友,无法呼叫");
         return
@@ -390,7 +388,6 @@ export default {
     },
     //分享名片
     onSendCard () {
-      console.log("cardData", this.friend, this.userInfo);
       this.$refs.chatSel.open(chats => {
         let idx = 0;
         chats.forEach(chat => {

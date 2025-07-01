@@ -392,7 +392,6 @@ export default {
       this.editRemarkState = false
       this.friendInfoModal = true
       this.dialogType = '个人信息'
-      console.log('userInfo', this.userInfo);
 
     },
     moveChatToTop () {
@@ -420,7 +419,6 @@ export default {
       let msgInfo = JSON.parse(JSON.stringify(file.msgInfo));
       msgInfo.content = JSON.stringify(data);
       msgInfo.receipt = this.isReceipt;
-      console.log('msgInfo', msgInfo);
 
       this.sendMessageRequest(msgInfo).then((m) => {
         msgInfo.loadStatus = 'ok';
@@ -497,7 +495,6 @@ export default {
       this.chatStore.insertMessage(msgInfo, file.chat);
     },
     onFileBefore (file) {
-      console.log(file);
 
       // 被封禁提示
       if (this.isBanned) {
@@ -948,7 +945,6 @@ export default {
       else {
         this.selectMessageList = this.selectMessageList.filter(msg => msg.id !== item.id);
       }
-      console.log('当前已选消息列表:', this.selectMessageList);
     },
     // 转发按钮
     messageTranspond () {
@@ -1199,7 +1195,6 @@ export default {
       if (this.reqQueue.length && !this.isSending) {
         this.isSending = true;
         const reqData = this.reqQueue.shift();
-        console.log('processReqQueue', reqData);
 
         this.$http({
           url: this.editMessage ? `/message/private/edit` : this.messageAction,
@@ -1248,7 +1243,6 @@ export default {
       return this.userInfo.online ? '在线' : this.$date.toTimeText(this.userInfo.lastLoginTime, true, true);
     },
     isFriend () {
-      console.log('isFriend', this.friendStore.isFriend(this.userInfo.id));
 
       return this.friendStore.isFriend(this.userInfo.id);
     },
@@ -1278,7 +1272,6 @@ export default {
         (this.isGroup && this.group.isBanned)
     },
     isGroup () {
-      console.log('isGroup', this.chat.type == 'GROUP');
       return this.chat.type == 'GROUP';
     },
     isPrivate () {

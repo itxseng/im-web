@@ -81,7 +81,6 @@ export default {
         if (f.deleted) {
           return;
         }
-        console.log('members', this.members);
 
         let friend = JSON.parse(JSON.stringify(f))
         let m = this.members.filter((m) => !m.quit).find((m) => m.userId == f.id);

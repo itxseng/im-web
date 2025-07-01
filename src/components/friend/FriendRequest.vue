@@ -70,7 +70,6 @@ export default {
     },
     recvRequests () {
       let requests = this.friendStore.requests;
-      console.log(this.friendStore.requests);
       return requests.filter((req) => req.recvId == this.mine.id);
     },
     sendRequests () {
