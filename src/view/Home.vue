@@ -10,7 +10,7 @@
               <head-image :name="$store.state.userStore.userInfo.nickName"
                           :size="38"
                           :url="$store.state.userStore.userInfo.headImageThumb"
-                          @click.native="showSetting">
+                          @click="showSetting">
               </head-image>
             </div>
             <div class="menu">

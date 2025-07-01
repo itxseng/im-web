@@ -1,8 +1,8 @@
 <template>
 	<div>
-		<el-dialog v-dialogDrag top="5vh" :close-on-click-modal="false" :close-on-press-escape="false"
-			custom-class="rtc-group-video-dialog" :visible.sync="showRoom" :fullscreen="isFullScreen"
-			:width="width + 'px'" :before-close="onQuit">
+                <el-dialog v-dialogDrag top="5vh" :close-on-click-modal="false" :close-on-press-escape="false"
+                        custom-class="rtc-group-video-dialog" v-model="showRoom" :fullscreen="isFullScreen"
+                        :width="width + 'px'" :before-close="onQuit">
 			<div class='rtc-group-video'>
 				<div class="video-box" :style="`width:${width}px;`">
 					<div class="video-list-1" v-show="!isLeaderMode" :id="'videos'" ref="videos">

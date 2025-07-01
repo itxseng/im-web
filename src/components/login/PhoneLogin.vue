@@ -5,7 +5,7 @@
              status-icon
              :rules="rules"
              ref="loginForm"
-             @keyup.enter.native="submitForm('loginForm')">
+             @keyup.enter="submitForm('loginForm')">
       <div class="login-brand">
         <img :src="userImg"
              alt=""
@@ -33,7 +33,7 @@
                   v-model="loginForm.userName"
                   placeholder="请输入手机号"
                   :suffix-icon="suffixIcon"
-                  @click.native="handleClick"
+                  @click="handleClick"
                   ref="inputRef">
         </el-input>
         <el-popover placement="bottom-start"

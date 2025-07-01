@@ -1,15 +1,17 @@
 <template>
-    <el-dialog class="friend-apply" title="申请添加好友" width="400px" :visible.sync="isShow" :before-close="onClose"
+    <el-dialog class="friend-apply" title="申请添加好友" width="400px" v-model="isShow" :before-close="onClose"
         append-to-body>
         <div>
             <el-input type="textarea"  v-model="remark" maxlength="255" rows="5">
             </el-input>
             <div class="tip">提示: 对方开启了好友验证,等待对方同意后才能成为好友</div>
         </div>
-        <span slot="footer" class="dialog-footer">
+        <template #footer>
+        <span class="dialog-footer">
             <el-button @click="onClose()">取 消</el-button>
             <el-button type="primary" @click="onOk()">确 定</el-button>
         </span>
+        </template>
     </el-dialog>
 </template>
 

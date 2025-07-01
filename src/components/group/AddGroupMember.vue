@@ -1,6 +1,6 @@
 <template>
   <el-dialog title="邀请好友"
-             :visible.sync="show"
+             v-model="show"
              width="620px"
              :before-close="close"
              :append-to-body="appendToBody ?  true : false">
@@ -19,12 +19,12 @@
                :key="friend.id">
             <friend-item v-show="friend.showNickName.includes(searchText)"
                          :showDelete="false"
-                         @click.native="onSwitchCheck(friend)"
+                         @click="onSwitchCheck(friend)"
                          :menu="false"
                          :friend="friend"
                          :active="false">
               <el-checkbox :disabled="friend.disabled"
-                           @click.native.stop=""
+                           @click.stop=""
                            class="agm-friend-checkbox"
                            v-model="friend.isCheck"
                            size="medium"></el-checkbox>
@@ -48,12 +48,13 @@
         </el-scrollbar>
       </div>
     </div>
-    <span slot="footer"
-          class="dialog-footer">
+    <template #footer>
+    <span class="dialog-footer">
       <el-button @click="close()">取 消</el-button>
       <el-button type="primary"
                  @click="onOk()">确 定</el-button>
     </span>
+    </template>
   </el-dialog>
 </template>
 

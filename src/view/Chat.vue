@@ -46,7 +46,7 @@
           <chat-item v-if="!chat.delete && (chat.showName || '').includes(searchText)"
                      :chat="chat"
                      :index="index"
-                     @click.native="onActiveItem(chat,index)"
+                     @click="onActiveItem(chat,index)"
                      @delete="onDelItem(chat)"
                      @top="onTop(chat)"
                      @info="onShowInfo(chat)"
@@ -73,7 +73,7 @@
                        :chat="activeChat"></chat-system-box>
       <add-friend :dialogVisible="showAddFriend"
                   @close="onCloseAddFriend"></add-friend>
-      <el-dialog :visible.sync="dialogModal"
+      <el-dialog v-model="dialogModal"
                  width="450px"
                  :destroy-on-close="true">
         <CreateGroup @reload="dialogModalClose"

@@ -1,8 +1,8 @@
 <template>
-	<el-dialog title="添加好友" :visible.sync="dialogVisible" width="460px" :before-close="onClose"
-		:close-on-click-modal="false" custom-class="add-friend">
-		<el-input placeholder="用户名/昵称/手机号/邮箱,最多展示20条" class="input-with-select" v-model="searchText" size="small"
-			@keyup.enter.native="onSearch()" @input="onSearchTextChange">
+        <el-dialog title="添加好友" v-model="dialogVisible" width="460px" :before-close="onClose"
+                :close-on-click-modal="false" custom-class="add-friend">
+                <el-input placeholder="用户名/昵称/手机号/邮箱,最多展示20条" class="input-with-select" v-model="searchText" size="small"
+                        @keyup.enter="onSearch()" @input="onSearchTextChange">
 			<i class="el-icon-search el-input__icon" slot="suffix" @click="onSearch()"> </i>
 		</el-input>
 		<el-scrollbar v-if="!isNoData" class="scroll-box">

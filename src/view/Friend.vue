@@ -83,7 +83,7 @@
                          :active="friend.id === activeFriend.id"
                          @chat="onSendMessage(friend)"
                          @delete="onDelFriend(friend)"
-                         @click.native="onActiveItem(friend)">
+                         @click="onActiveItem(friend)">
             </friend-item>
           </div>
           <div v-if="i < friendValues.length - 1"
@@ -113,7 +113,7 @@
                           :name="userInfo.nickName"
                           :url="userInfo.headImage"
                           :radius="'50%'"
-                          @click.native="showFullImage()"></head-image>
+                          @click="showFullImage()"></head-image>
               <div class="friend-detail-top-text">
                 <div class="friend-detail-top-text-name">
                   <span>{{ userInfo.nickName }}</span>
@@ -187,7 +187,7 @@
                 @select="onSelectMenu"></right-menu>
     <add-friend :dialogVisible="showAddFriend"
                 @close="onCloseAddFriend"></add-friend>
-    <el-dialog :visible.sync="dialogModal"
+    <el-dialog v-model="dialogModal"
                width="450px"
                :destroy-on-close="true">
       <CreateGroup @reload="dialogModalClose"

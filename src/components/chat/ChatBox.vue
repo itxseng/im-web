@@ -229,7 +229,7 @@
                     @locateQuote="locateMessage"
                     :groupMembers="groupMembers"></chat-history>
     </el-container>
-    <el-dialog :visible.sync="friendInfoModal"
+    <el-dialog v-model="friendInfoModal"
                width="450px">
       <FriendInfo v-if="friendInfoModal && dialogType === '个人信息'"
                   :userInfo="userInfo"

@@ -1,5 +1,5 @@
 <template>
-	<el-drawer title="聊天记录" size="700px" :visible.sync="isShow" direction="rtl" :before-close="close">
+        <el-drawer title="聊天记录" size="700px" v-model="isShow" direction="rtl" :before-close="close">
 		<div class="chat-history">
 			<div class="search-bar">
 				<el-input class="search-text" size="small" placeholder="搜索聊天记录" v-model="searchText"
@@ -12,9 +12,9 @@
 					<el-tab-pane label="全部" name="all">
 						<el-scrollbar v-if="messageSize > 0" ref="allScrollBox" :style="tabPaneStyle">
 							<div v-for="(msgInfo, idx) in showMessages" :key="showMinIdx + idx">
-								<chat-history-item @click.native="onClickItem(showMinIdx + idx)"
-									@contextmenu.prevent.native="onRclickItem($event, showMinIdx + idx)"
-									@dblclick.native="onDblclickItem(showMinIdx + idx)"
+								<chat-history-item ="onClickItem(showMinIdx + idx)"
+									@contextmenu.prevent="onRclickItem($event, showMinIdx + idx)"
+									="onDblclickItem(showMinIdx + idx)"
 									:active="activeIdx == showMinIdx + idx" :headImage="headImage(msgInfo)"
 									:showName="showName(msgInfo)" :quoteShowName="showName(msgInfo.quoteMessage)"
 									:msgInfo="msgInfo">
@@ -26,9 +26,9 @@
 					<el-tab-pane label="文字" name="text">
 						<el-scrollbar v-if="messageSize > 0" ref="textScrollBox" :style="tabPaneStyle">
 							<div v-for="(msgInfo, idx) in showMessages" :key="showMinIdx + idx">
-								<chat-history-item @click.native="onClickItem(showMinIdx + idx)"
-									@contextmenu.prevent.native="onRclickItem($event, showMinIdx + idx)"
-									@dblclick.native="onDblclickItem(showMinIdx + idx)"
+								<chat-history-item ="onClickItem(showMinIdx + idx)"
+									@contextmenu.prevent="onRclickItem($event, showMinIdx + idx)"
+									="onDblclickItem(showMinIdx + idx)"
 									:active="activeIdx == showMinIdx + idx" :headImage="headImage(msgInfo)"
 									:showName="showName(msgInfo)" :quoteShowName="showName(msgInfo.quoteMessage)"
 									:msgInfo="msgInfo">
@@ -58,9 +58,9 @@
 					<el-tab-pane label="文件" name="file">
 						<el-scrollbar v-if="messageSize > 0" ref="fileScrollBox" :style="tabPaneStyle">
 							<div v-for="(msgInfo, idx) in showMessages" :key="showMinIdx + idx">
-								<chat-history-item @click.native="onClickItem(showMinIdx + idx)"
-									@contextmenu.prevent.native="onRclickItem($event, showMinIdx + idx)"
-									@dblclick.native="onDblclickItem(showMinIdx + idx)"
+								<chat-history-item ="onClickItem(showMinIdx + idx)"
+									@contextmenu.prevent="onRclickItem($event, showMinIdx + idx)"
+									="onDblclickItem(showMinIdx + idx)"
 									:active="activeIdx == showMinIdx + idx" :headImage="headImage(msgInfo)"
 									:showName="showName(msgInfo)" :quoteShowName="showName(msgInfo.quoteMessage)"
 									:msgInfo="msgInfo">
@@ -72,9 +72,9 @@
 					<el-tab-pane label="语音" name="voice">
 						<el-scrollbar v-if="messageSize > 0" ref="voiceScrollBox" :style="tabPaneStyle">
 							<div v-for="(msgInfo, idx) in showMessages" :key="showMinIdx + idx">
-								<chat-history-item @click.native="onClickItem(showMinIdx + idx)"
-									@contextmenu.prevent.native="onRclickItem($event, showMinIdx + idx)"
-									@dblclick.native="onDblclickItem(showMinIdx + idx)"
+								<chat-history-item ="onClickItem(showMinIdx + idx)"
+									@contextmenu.prevent="onRclickItem($event, showMinIdx + idx)"
+									="onDblclickItem(showMinIdx + idx)"
 									:active="activeIdx == showMinIdx + idx" :headImage="headImage(msgInfo)"
 									:showName="showName(msgInfo)" :quoteShowName="showName(msgInfo.quoteMessage)"
 									:msgInfo="msgInfo">

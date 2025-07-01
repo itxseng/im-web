@@ -1,5 +1,5 @@
 <template>
-    <el-dialog class="captcha-image" title="验证" width="400px" :visible.sync="isShow" 
+    <el-dialog class="captcha-image" title="验证" width="400px" v-model="isShow"
         :before-close="onClose"    :close-on-click-modal="false" :append-to-body="true">
         <el-form :model="formData" :rules="rules" ref="captchaForm">
             <el-form-item prop="code">
@@ -7,10 +7,12 @@
                 <el-input v-model="formData.code" placeholder="验证码,不区分大小写"></el-input>
             </el-form-item>
         </el-form>
-        <span slot="footer" class="dialog-footer">
+        <template #footer>
+        <span class="dialog-footer">
             <el-button @click="onClose()">取 消</el-button>
             <el-button type="primary" @click="onOk()">确 定</el-button>
         </span>
+        </template>
     </el-dialog>
 </template>
 

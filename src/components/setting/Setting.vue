@@ -1,7 +1,7 @@
 <template>
   <el-dialog class="setting"
              title="设置"
-             :visible.sync="isShow"
+             v-model="isShow"
              width="600px">
     <el-tabs v-model="tabValue"
              tab-position="left"

@@ -1,5 +1,5 @@
 <template>
-	<el-dialog title="是否加入通话?" :visible.sync="isShow" width="400px">
+        <el-dialog title="是否加入通话?" v-model="isShow" width="400px">
 		<div class="rtc-group-join">
 			<div class="host-info">
 				<head-image :name="rtcInfo.host.nickName" :url="rtcInfo.host.headImage" :size="80"></head-image>
@@ -15,11 +15,13 @@
 				</div>
 			</div>
 		</div>
-		<span slot="footer" class="dialog-footer">
-			<el-button @click="onCancel()">取 消</el-button>
-			<el-button type="primary" @click="onOk()">确 定</el-button>
-		</span>
-	</el-dialog>
+                <template #footer>
+                <span class="dialog-footer">
+                        <el-button @click="onCancel()">取 消</el-button>
+                        <el-button type="primary" @click="onOk()">确 定</el-button>
+                </span>
+                </template>
+        </el-dialog>
 </template>
 
 <script>

@@ -1,7 +1,7 @@
 <template>
   <el-dialog class="chat-record"
              title="语音录制"
-             :visible.sync="visible"
+             v-model="visible"
              width="350px"
              :before-close="onClose">
     <div v-show="mode == 'RECORD'">
