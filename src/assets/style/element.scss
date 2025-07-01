@@ -3,8 +3,8 @@ $--font-path: '~element-plus/dist/fonts';
 
 // 文字
 $--font-family: Microsoft YaHei, 'Avenir', Helvetica, Arial, sans-serif;
-@import "thems";
 @use "element-plus/theme-chalk/src/index" as *;
+@import "thems";
 
 .el-message {
   z-index: 99999999 !important;
