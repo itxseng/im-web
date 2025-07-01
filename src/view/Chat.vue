@@ -1,6 +1,6 @@
 <template>
   <el-container class="chat-page">
-    <el-aside width="300px"
+    <el-aside width="350px"
               class="chat-list-box">
       <div class="chat-list-header">
         <el-input class="search-text"
@@ -54,12 +54,16 @@
                      @biaoweiweidu="setUnread"
                      @heimingdan="blacklist"
                      @chakangerenxinxi="showFriendInfo(chat)"
+                     @xiaoxitongzhi="closeNotify(chat)"
+                     @qingchu="clearChat(chat)"
+                     @tousu="complaint(chat)"
                      :active="chat === chatStore.activeChat"></chat-item>
         </div>
       </el-scrollbar>
       <NavBar v-if="!loading" />
     </el-aside>
-    <el-container class="chat-box">
+    <el-container class="chat-box"
+                  v-loading="chatLoading">
       <div class="img-box"
            v-if="!activeChat">
         <img src="@/assets/bg-logo.png"
@@ -68,7 +72,23 @@
       <chat-box v-if="activeChat && activeChat.type != 'SYSTEM'"
                 :chat="activeChat"
                 :itemIndex="isShow"
-                :showUserInfo="showUserInfo"></chat-box>
+                :showUserInfo="showUserInfo"
+                :showComplaint="showComplaint"
+                :editRemarkModal="editRemarkModal"
+                :updateNotifyExpireTs="updateNotifyExpireTs"
+                @updateInfo="updateInfo"
+                @delete="onDelItem(activeChat)"
+                @top="onTop(activeChat)"
+                @info="onShowInfo(activeChat)"
+                @unpinfromtop="unpinFromTop(activeChat)"
+                @biaoweiweidu="setUnread"
+                @heimingdan="blacklist"
+                @chakangerenxinxi="showFriendInfo(activeChat)"
+                @xiaoxitongzhi="closeNotify(activeChat)"
+                @qingchu="clearChat(activeChat)"
+                @tousu="complaint(activeChat)"
+                @shanchulianxiren="delLinkman(activeChat)"
+                @bianjilianxiren="editLinkman(activeChat)"></chat-box>
       <chat-system-box v-if="activeChat && activeChat.type == 'SYSTEM'"
                        :chat="activeChat"></chat-system-box>
       <add-friend :dialogVisible="showAddFriend"
@@ -116,10 +136,19 @@ export default {
       selectMessageList: [],
       dialogType: '',
       commonGroupList: [],
-      showUserInfo: false
+      removeLoading: null,
+      showUserInfo: false,
+      showComplaint: false,
+      editRemarkModal: false,
+      updateNotifyExpireTs:0
     }
   },
   methods: {
+    updateInfo (type) {
+      this.showUserInfo = type
+      this.showComplaint = type
+      this.editRemarkModal = type
+    },
     dialogModalClose () {
       this.dialogModal = false;
     },
@@ -130,13 +159,16 @@ export default {
       this.showAddFriend = false;
     },
     onActiveItem (item, index) {
-      this.showUserInfo = false
       this.isShow = index
       this.chatStore.setActiveChat(item.targetId);
     },
     onDelItem (chat) {
       const idx = this.chatStore.findChatIdx(chat)
       this.chatStore.removeChat(idx);
+    },
+    clearChat (chat) {
+      const idx = this.chatStore.findChatIdx(chat)
+      this.chatStore.removeRecord(idx);
     },
     onTop (chat) {
       const idx = this.chatStore.findChatIdx(chat)
@@ -152,6 +184,29 @@ export default {
         }
         this.$router.push("/home/group?id=" + chat.targetId);
       }
+    },
+    // 关闭消息通知
+    closeNotify (chat) {
+      console.log(chat);
+
+      const isPrivate = chat.type === 'PRIVATE';
+      const url = isPrivate ? '/friend/notify/expire' : '/group/notify/expire';
+      const method = isPrivate ? 'post' : 'put';
+      const key = isPrivate ? 'friendId' : 'groupId';
+
+      const notifyExpireTs = chat.notifyExpireTs ? 0 : 876000 * 1000 * 60 * 60; // 100年（大致）
+      const data = {
+        [key]: chat.targetId,
+        notifyExpireTs
+      };
+
+      this.$http({ url, method, data }).then(() => {
+        this.chatStore.addNotify(chat.targetId, notifyExpireTs);
+        this.updateNotifyExpireTs = notifyExpireTs;
+        console.log(this.updateNotifyExpireTs);
+        
+        this.$message.success("设置成功");
+      });
     },
     unpinFromTop (chat) {
       const idx = this.chatStore.findChatIdx(chat)
@@ -172,6 +227,7 @@ export default {
           })
       }
     },
+    // 查看用户信息
     showFriendInfo (item) {
       this.chatStore.chats.forEach((chat, index) => {
         if (item.targetId == chat.targetId) {
@@ -184,9 +240,51 @@ export default {
     // 设置未读表示
     setUnread (item) {
       this.chatStore.setUnreadCount(item.targetId);
-    }
+    },
+    // 投诉
+    complaint (item) {
+      console.log(item);
+      this.chatStore.chats.forEach((chat, index) => {
+        if (item.targetId == chat.targetId) {
+          this.isShow = index
+        }
+      })
+      this.chatStore.setActiveChat(item.targetId);
+      this.showComplaint = true
+    },
+    // 删除联系人
+    delLinkman (item) {
+      this.$confirm(`确认删除'${item.showName}',并清空聊天记录吗?`, '确认解除?', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$http({
+          url: `/friend/delete/${item.targetId}`,
+          method: 'delete'
+        }).then(() => {
+          this.onCloseModal()
+          this.$message.success("删除好友成功");
+          this.chatStore.removeChat(this.itemIndex);
+          this.friendStore.removeFriend(item.targetId);
+          this.chatStore.removePrivateChat(item.targetId);
+        })
+      })
+    },
+    editLinkman (item) {
+      this.chatStore.chats.forEach((chat, index) => {
+        if (item.targetId == chat.targetId) {
+          this.isShow = index
+        }
+      })
+      this.chatStore.setActiveChat(item.targetId);
+      this.editRemarkModal = true
+    },
   },
   computed: {
+    chatLoading () {
+      return this.chatStore.chatLoading;
+    },
     activeChat () {
       return this.chatStore.activeChat;
     },
@@ -204,8 +302,6 @@ export default {
       display: flex;
       flex-direction: column;
       background: #fff;
-      flex: 0 0 300px;
-      width: 300px;
 
       .chat-list-header {
         height: 32px;
@@ -262,7 +358,7 @@ export default {
       }
     }
     .chat-box {
-      flex: 1;
+      width: 70%;
       background: linear-gradient(
         270deg,
         #ffffff 0%,

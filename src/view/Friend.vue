@@ -1,6 +1,6 @@
 <template>
   <el-container class="friend-page">
-    <el-aside width="30%"
+    <el-aside width="350px"
               class="friend-list-box">
       <div class="friend-list-header">
         <el-input class="search-text"

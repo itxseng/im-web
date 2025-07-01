@@ -50,15 +50,18 @@
             </el-switch>
           </span>
         </li>
-        <li @click="openModal('图片')" v-if="imageAmount > 0">
+        <li @click="openModal('图片')"
+            v-if="imageAmount > 0">
           <span class="icon image-icon"></span>
           <span class="text">{{ imageAmount }}张图片</span>
         </li>
-        <li @click="openModal('视频')" v-if="videoAmount > 0">
+        <li @click="openModal('视频')"
+            v-if="videoAmount > 0">
           <span class="icon video-icon"></span>
           <span class="text">{{ videoAmount }}个视频</span>
         </li>
-        <li @click="openModal('文件')" v-if="fileAmount > 0">
+        <li @click="openModal('文件')"
+            v-if="fileAmount > 0">
           <span class="icon files-icon"></span>
           <span class="text">{{ fileAmount }}个文件</span>
         </li>
@@ -109,7 +112,7 @@
     </div>
     <el-dialog append-to-body
                :visible.sync="editRemarkModal"
-               width="25%"
+               width="40%"
                :before-close="handleClose">
       <div class="edit-remark-modal-content">
         <p>编辑备注</p>
@@ -186,6 +189,10 @@ export default {
       type: Boolean,
       default: false
     },
+    editRemarkShow: {
+      type: Boolean,
+      default: false
+    },
     itemIndex: {
       type: Number
     },
@@ -255,6 +262,7 @@ export default {
     },
     // 修改备注
     editRemark () {
+      console.log('open');
       this.editRemarkValue = this.userInfo.remarkNickName
       this.editRemarkModal = true
     },
@@ -282,7 +290,7 @@ export default {
           this.friendStore.updateFriend(friend);
         })
       this.editRemarkModal = false
-      this.$emit('updateUserInfo', true)
+      this.$emit('updateInfo', true)
     },
     // 切换
     blacklistChange () {
@@ -346,7 +354,7 @@ export default {
     },
     // 关闭弹框
     onCloseModal () {
-      this.$emit('friendInfoClose', false)
+      this.$emit('infoClose', false)
     },
     // popover关闭
     popoverClose () {
@@ -449,7 +457,7 @@ export default {
         } else {
           this.message = true;
         }
-        this.$emit('updateUserInfo', true);
+        this.$emit('updateInfo', true);
       });
     },
     getCommonGroupList (friendId, page, size) {
@@ -478,7 +486,7 @@ export default {
       }).then(() => {
         this.$message.success("设置成功");
         this.chatStore.setStar(this.userInfoData.id, type)
-        this.$emit('updateUserInfo', true);
+        this.$emit('updateInfo', true);
       })
     }
   },
@@ -751,7 +759,7 @@ export default {
     p {
       padding: 0px;
       margin: 0px;
-      font-size: 20px;
+      font-size: 18px;
       color: #999;
       margin-bottom: 20px;
     }

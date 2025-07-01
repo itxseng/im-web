@@ -3,7 +3,7 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>视频</p>
     </div>
     <div class="content">
@@ -54,8 +54,8 @@ export default {
     }
   },
   methods: {
-    returnFriendInfo () {
-      this.$emit('returnFriendInfo')
+    returnInfo () {
+      this.$emit('returnInfo')
     },
     transitionJson (content) {
       return JSON.parse(content)

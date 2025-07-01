@@ -25,7 +25,8 @@
     "sass-loader": "10.1.1",
     "vue": "2.7.16",
     "vue-axios": "3.5.2",
-    "vue-router": "3.6.5"
+    "vue-router": "3.6.5",
+    "vue-video-player": "^5.0.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.12",

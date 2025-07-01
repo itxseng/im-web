@@ -623,11 +623,11 @@ export default {
     overflow: hidden;
     // background: var(--im-color-primary-light-9);
     .app-container {
-      width: 100%;
-      height: 100%;
+      width: 62vw;
+      height: 80vh;
       display: flex;
-      min-width: 1000px;
-      min-height: 650px;
+      min-height: 600px;
+      min-width: 970px;
       position: absolute;
       // border-radius: 4px;
       overflow: hidden;
@@ -636,8 +636,8 @@ export default {
 
       &.fullscreen {
         transition: 0.2s;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: calc(100% - 30px);
       }
     }
 

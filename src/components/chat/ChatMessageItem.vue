@@ -1,9 +1,9 @@
 <template>
   <div class="chat-msg-item"
-       :class="{ active: innerActive }">
+       :class="{ active: innerActive }"
+       @click.prevent="onSelectMessage(msgInfo,!checked)">
     <el-checkbox v-if="isNormal && selected"
                  v-model="checked"
-                 @change="onSelectMessage(msgInfo)"
                  :disabled="!isNormal"
                  class="chat-msg-item-checkbox" />
     <div class="message-tip"
@@ -60,7 +60,7 @@
                     class="send-fail el-icon-warning"></span>
             </div>
             <div class="message-video"
-                 v-if="msgInfo.type == $enums.MESSAGE_TYPE.VIDEO">
+                 v-if="msgInfo.type == $enums.MESSAGE_TYPE.VIDEO && contentData !== null">
               <video class="send-video"
                      controls
                      preload="none"
@@ -76,20 +76,13 @@
               <div class="file-box"
                    v-loading="loading">
                 <div class="file-info">
-                  <!-- <el-link class="file-name"
-                           :underline="true"
-                           target="_blank"
-                           type="primary"
-                           :href="contentData.url.originUrl"
-                           :download="contentData.name">{{ contentData.name
-										}}</el-link> -->
                   <div class="file-icon">
                     <downloadFile :msgInfo="msgInfo"
                                   :chat="chat"
                                   :id="msgInfo.id" />
                   </div>
                   <div class="file-text">
-                    <p>{{ contentData.name}}</p>
+                    <p class="file-text-name">{{ contentData.name}}</p>
                     <div class="file-size">
                       <span>{{ fileSize }}</span>
                       <span>{{filtrationTime(msgInfo.sendTime)}}</span>
@@ -109,8 +102,10 @@
             <audio controls
                    :src="contentData.url.originUrl"></audio>
           </div>
-          <ChatForwardMessage v-if="msgInfo.type == $enums.MESSAGE_TYPE.FORWARD"
-                              :cardInfo="contentData" />
+          <ChatForwardMessage v-if="msgInfo.type == $enums.MESSAGE_TYPE.FORWARD && groupMembers"
+                              :cardInfo="msgInfo"
+                              :chat="chat"
+                              :groupMembers="groupMembers" />
           <chat-user-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.USER_CARD"
                           :cardInfo="contentData"></chat-user-card>
           <chat-group-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.GROUP_CARD"
@@ -260,9 +255,11 @@ export default {
       this.$message.error("该文件已发送失败，目前不支持自动重新发送，建议手动重新发送")
     },
     showFullImageBox () {
-      let imageUrl = this.contentData.originUrl;
-      if (imageUrl) {
-        this.$eventBus.$emit("openFullImage", imageUrl);
+      if (!this.selected) {
+        let imageUrl = this.contentData.originUrl;
+        if (imageUrl) {
+          this.$eventBus.$emit("openFullImage", imageUrl);
+        }
       }
     },
     onPlayVoice () {
@@ -295,7 +292,7 @@ export default {
           name: '复制文字'
         });
       }
-      if (this.msgInfo.type == this.$enums.MESSAGE_TYPE.TEXT || this.msgInfo.type == this.$enums.MESSAGE_TYPE.IMAGE || this.msgInfo.type == this.$enums.MESSAGE_TYPE.FILE || this.msgInfo.type == this.$enums.MESSAGE_TYPE.VIDEO || this.msgInfo.type == this.$enums.MESSAGE_TYPE.AUDIO) {
+      if (this.msgInfo.type == this.$enums.MESSAGE_TYPE.TEXT || this.msgInfo.type == this.$enums.MESSAGE_TYPE.IMAGE || this.msgInfo.type == this.$enums.MESSAGE_TYPE.FILE || this.msgInfo.type == this.$enums.MESSAGE_TYPE.VIDEO) {
         menuItems.push({
           key: 'COLLECT',
           name: '收藏'
@@ -312,12 +309,6 @@ export default {
           key: 'COMPLAINT',
           name: '投诉'
         });
-        if (this.msgInfo.selfSend && this.msgInfo.id > 0) {
-          menuItems.push({
-            key: 'RECALL',
-            name: '撤回',
-          });
-        }
         if ((this.isOwner || this.isManager) && this.$msgType.isNormal(this.msgInfo.type)) {
           menuItems.push({
             key: 'TOP',
@@ -329,6 +320,12 @@ export default {
       //   key: 'DELETE',
       //   name: '删除消息'
       // });
+      if (this.msgInfo.selfSend && this.msgInfo.id > 0) {
+        menuItems.push({
+          key: 'RECALL',
+          name: '撤回',
+        });
+      }
       menuItems.push({
         key: 'DELETEALL',
         name: '删除消息'
@@ -363,7 +360,9 @@ export default {
       let m = this.groupMembers.find(m => m.userId == userId);
       return m && m.isManager
     },
-    onSelectMessage (item) {
+    onSelectMessage (item, status, type) {
+      if (!this.selected) return
+      this.checked = status;
       this.$emit('selectMessage', { type: this.checked, item });
       console.log("选择消息", item, this.checked);
     },
@@ -450,6 +449,7 @@ export default {
       position: absolute;
       top: 19px;
       right: 13px;
+      cursor: pointer;
     }
     .mr {
       margin-right: 30px !important;
@@ -525,7 +525,6 @@ export default {
           .message-text {
             display: inline-block;
             position: relative;
-            max-width: 100%;
             line-height: 26px;
             padding: 6px 15px 6px 15px;
             background: white;
@@ -590,6 +589,7 @@ export default {
             margin-bottom: 2px;
 
             .file-box {
+              width: 210px;
               display: flex;
               flex-wrap: nowrap;
               align-items: center;
@@ -597,24 +597,29 @@ export default {
               box-shadow: var(--im-box-shadow-light);
               border-radius: 4px;
               padding: 10px 15px;
-
               .file-info {
                 flex: 1;
                 height: 100%;
                 font-size: 14px;
-                margin-right: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                box-sizing: border-box;
                 .file-text {
-                  width: calc(100% - 55px);
+                  width: 155px;
                   height: 100%;
-                  margin-left: 10px;
                   display: flex;
                   flex-direction: column;
                   align-items: flex-start;
-                  p {
+                  box-sizing: border-box;
+                  .file-text-name {
+                    width: 100%;
                     margin: 0;
+                    overflow: hidden;
+                    display: block;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    text-align: left;
                   }
                 }
                 .file-name {
@@ -676,6 +681,8 @@ export default {
           }
 
           .quote-message {
+            max-width: 400px;
+            min-width: 50px;
             display: block;
             margin-top: 3px;
             cursor: pointer;
@@ -772,14 +779,16 @@ export default {
             flex-direction: row-reverse;
           }
 
-        .bottom {
-          padding-left: 170px;
-          padding-right: 5px;
-          .message-text {
-            background-color: #3066ec;
-            margin-left: 10px;
-            color: #fff;
-            max-width: 100%;
+          .bottom {
+            padding-left: 170px;
+            padding-right: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            .message-text {
+              background-color: #3066ec;
+              margin-left: 10px;
+              color: #fff;
 
               &:after {
                 left: auto;

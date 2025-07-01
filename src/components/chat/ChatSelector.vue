@@ -3,7 +3,7 @@
              :title="title"
              :visible.sync="show"
              :append-to-body="appendToBody ?  true : false"
-             width="700px">
+             width="50%">
     <div class="chat-selector">
       <div class="left-box">
         <el-input placeholder="搜索"
@@ -114,7 +114,7 @@ export default {
       type: String,
       default: ""
     },
-    appendToBody:{
+    appendToBody: {
       type: Boolean,
       default: false
     }
@@ -291,13 +291,14 @@ export default {
   .chat-selector {
     display: flex;
     padding: 0px 10px;
+    height: 53vh;
     .left-box {
       width: 48%;
       overflow: hidden;
       border: var(--im-border);
 
       .left-scroll-box {
-        height: 400px;
+        height: calc(100% - 82px);
 
         .check-box {
           margin-right: 10px;
@@ -321,9 +322,10 @@ export default {
               flex: 1;
               white-space: nowrap;
               overflow: hidden;
-              display: flex;
-              align-items: center;
-
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 20px;
               .el-tag {
                 min-width: 20px;
                 text-align: center;
@@ -370,7 +372,7 @@ export default {
       }
 
       .right-scroll-box {
-        height: 460px;
+        height: calc(100% - 32px);
 
         .checked-item {
           display: flex;
@@ -383,7 +385,9 @@ export default {
             margin-left: 10px;
             flex: 1;
             text-align: left;
+            white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .close {
