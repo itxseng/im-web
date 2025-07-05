@@ -19,7 +19,8 @@
            ref="messages">
         <div class="title">置顶消息:</div>
         <div class="content"
-             v-html="content(item)">
+             v-html="content(item)"
+             @click.stop="onLocate(item)">
         </div>
         <div class="close"
              title="移除"
@@ -98,6 +99,9 @@ export default {
         url: "/group/hideTopMessage/" + this.group.id,
         method: 'delete'
       });
+    },
+    onLocate (item) {
+      this.$emit('locate', item);
     },
     content (value) {
       let content = "不支持的消息类型";
