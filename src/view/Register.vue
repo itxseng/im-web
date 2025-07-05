@@ -274,7 +274,7 @@ export default {
         window.electronStore.setItem("accessToken", res.accessToken);
         window.electronStore.setItem("refreshToken", res.refreshToken);
         this.$router.push("/home/chat");
-        window.electronAPI.resize(1000, 650);
+        window.electronAPI.resize(1075, 650);
       }
     },
     nextStep () {

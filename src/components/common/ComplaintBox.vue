@@ -3,7 +3,7 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>投诉</p>
     </div>
     <div class="content">
@@ -96,7 +96,7 @@ export default {
               type: 'success',
               message: '投诉成功'
             });
-            this.returnFriendInfo()
+            this.returnInfo()
           })
         } else {
           console.log('error submit!!');
@@ -104,13 +104,13 @@ export default {
         }
       });
     },
-    returnFriendInfo () {
+    returnInfo () {
       this.complaintForm = {
         title: '',
         content: '',
         fileUrlList: []
       };
-      this.$emit('returnFriendInfo')
+      this.$emit('returnInfo')
     },
     onUploadSuccess (data, file) {
       if (this.complaintForm.fileUrlList.length > 2) {

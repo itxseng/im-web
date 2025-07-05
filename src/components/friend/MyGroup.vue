@@ -39,7 +39,7 @@ export default {
         headImage: group.headImage,
       };
       this.chatStore.openChat(chat);
-      this.chatStore.setActiveChat(group.id);
+      this.chatStore.setActiveChat(group.id,'GROUP');
       this.$router.push("/home/chat");
     }
   },

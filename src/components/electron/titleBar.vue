@@ -85,11 +85,11 @@ export default {
     flex-direction: row;
     align-items: center;
     .window-controls-left {
-      width: 30%;
+      width: 350px;
       height: 100%;
     }
     .window-controls-right {
-      width: 70%;
+      width: calc(100% - 350px);
       height: 100%;
       display: flex;
       align-items: center;

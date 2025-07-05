@@ -1,15 +1,16 @@
 <template>
-  <div class="chat-quote-message">
+  <div :class="['chat-quote-message',msgInfo.status == 0 ? 'chat-quote-message-chat' : '']">
     <div v-if="isRecall"
          class="recall">{{ msgInfo.content }}</div>
+    <p v-if="!isRecall"
+       class="send-user">
+       {{ showName }}
+    </p>
     <div v-if="!isRecall"
-         class="send-user">
-      {{ showName + ":" }}
-    </div>
-    <div v-if="!isRecall"
-         class="quote-content">
-      <span v-if="msgInfo.type == $enums.MESSAGE_TYPE.TEXT"
-            v-html="$emo.transform(msgInfo.content, 'emoji-small')"></span>
+         :class="['quote-content',msgInfo.status == 0 ? 'quote-content-chat' : '']">
+      <p class="quote-content-text"
+         v-if="msgInfo.type == $enums.MESSAGE_TYPE.TEXT"
+         v-html="$emo.transform(`: ${msgInfo.content}`, 'emoji-small')"></p>
       <div v-if="msgInfo.type == $enums.MESSAGE_TYPE.IMAGE"
            class="quote-content-img">
         <img class="quote-image"
@@ -94,6 +95,7 @@ export default {
 
 <style lang="scss">
   .chat-quote-message {
+    //width: calc(100% - 40px);
     height: 100%;
     display: flex;
     align-items: center;
@@ -101,14 +103,26 @@ export default {
     font-size: var(--im-font-size-smaller);
     color: var(--im-text-color-light);
     .send-user {
+      max-width: 70px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       margin-right: 10px;
       font-weight: 600;
     }
-
     .quote-content {
+      flex: 1;
+      width: calc(100% - 105px);
       height: 100%;
       display: flex;
       align-items: center;
+      .quote-content-text {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+      }
       .quote-content-img {
         height: 100%;
         display: flex;
@@ -172,5 +186,15 @@ export default {
         }
       }
     }
+  }
+  .quote-content-chat {
+    width: 100% !important;
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .chat-quote-message-chat {
+    width: auto;
   }
 </style>

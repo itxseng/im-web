@@ -1,4 +1,4 @@
-<template>
+<template v-if="chat && msgInfo">
   <div class="chat-box-item"
        @click="onClickChatBox()"
        @mousemove="readedMessage()">
@@ -11,8 +11,9 @@
             <el-button type="primary"
                        size="medium"
                        @click="messageTranspond">转发</el-button>
-            <el-button type="danger"
-                       size="medium">删除</el-button>
+            <el-button type="primary"
+                       size="medium"
+                       @click="delMessage">删除</el-button>
           </div>
           <el-button type="text"
                      @click="onCloseSelected"
@@ -29,7 +30,7 @@
                 v-show="showTime">{{ showTime }}</span>
         </div>
         <div class="header-title"
-             @click="showFriendInfo"
+             @click="showGroupInfo"
              v-show="isGroup">
           <span>{{ title }}</span>
           <span class="last-login">{{`${groupInfo.membersCount}位成员`}}</span>
@@ -38,21 +39,21 @@
         <span title="群聊信息"
               v-if="isGroup"
               class="btn-side el-icon-more"
-              @click="onClickMore(1)"></span>
+              @click="onClickMore($event,1)"></span>
         <span title="用户消息"
               v-if="isPrivate"
               class="btn-side el-icon-more"
-              @click="onClickMore(2)"></span>
+              @click="onClickMore($event,2)"></span>
       </el-header>
       <el-main style="padding: 0;">
         <el-container>
           <el-container class="content-box">
-            <div v-if="isGroup && group.topMessage">
+            <div v-if="isGroup && group.topMessages && group.topMessages.length > 0"
+                 class="chat-top-message">
               <chat-top-message :group="group"
                                 :groupMembers="groupMembers"
                                 :msgInfo="group.topMessage"
-                                :headImage="headImage(group.topMessage)"
-                                :showName="showName(group.topMessage)"
+                                :showName="showName(group.topMessages)"
                                 @locate="locateMessage">
               </chat-top-message>
             </div>
@@ -61,13 +62,13 @@
                      @scroll="onScroll">
               <div class="im-chat-box">
                 <div v-for="(msgInfo, idx) in chat.messages"
-                     :key="msgInfo.id || msgInfo.tmpId || idx">
+                     :key="showMinIdx + idx">
                   <chat-message-item v-if="idx >= showMinIdx && (showMaxIdx < 0 || idx < showMaxIdx)"
                                      :id="msgInfo.id"
                                      @call="onCall(msgInfo.type)"
-                                     :active="activeMessageIdx == idx"
-                                     :activeSignal="activeMessageIdx == idx ? activeSignal : 0"
-                                     :mine="msgInfo.sendId == mine.id"
+                                     :active="activeMessageIdx === idx"
+                                     :activeSignal="activeMessageIdx === idx ? activeSignal : 0"
+                                     :mine="msgInfo.sendId === mine.id"
                                      :headImage="headImage(msgInfo)"
                                      :showName="showName(msgInfo)"
                                      :msgInfo="msgInfo"
@@ -76,6 +77,7 @@
                                      :group="group"
                                      :isGroup="isGroup"
                                      :groupMembers="groupMembers"
+                                     @openMemberInfo="openMemberInfo"
                                      @locateQuote="onLocateQuoteMessage"
                                      @delete="onDeleteMessage"
                                      @deleteall="onDeleteAllMessage"
@@ -229,37 +231,73 @@
                     @locateQuote="locateMessage"
                     :groupMembers="groupMembers"></chat-history>
     </el-container>
-    <el-dialog :visible.sync="friendInfoModal"
-               width="450px">
-      <FriendInfo v-if="friendInfoModal && dialogType === '个人信息'"
+    <el-dialog :visible.sync="dialogShow"
+               width="450px"
+               class="dialog-box-info"
+               :before-close="infoModalClose">
+      <FriendInfo ref="friendInfoRef"
+                  v-if="dialogShow && dialogType === '个人信息'"
                   :userInfo="userInfo"
                   :isFriend="isFriend"
                   :isBanned="isBanned"
                   :friend="friend"
                   :chat="chat"
                   :itemIndex="itemIndex"
-                  @updateUserInfo="updateUserInfo"
-                  @friendInfoClose="friendInfoClose"
+                  @openCode="openCode"
+                  @updateInfo="updateInfo"
+                  @infoClose="infoClose"
                   @openDialog="openDialog" />
+      <GroupInfoModal ref="groupInfoModalRef"
+                      v-if="dialogShow && dialogType === '群组信息'"
+                      :chat="chat"
+                      :groupMembers="groupMembers"
+                      @openCode="openCode"
+                      @updateMembers="updateMembers"
+                      @updateInfo="updateInfo"
+                      @openDialog="openDialog"
+                      @showMemberInfo="showMemberInfo" />
+      <GroupMemberModal v-if="dialogShow && dialogType === '群成员'"
+                        :chat="chat"
+                        :groupInfo="groupInfo"
+                        :groupMembers="groupMembers"
+                        @showMemberInfo="showMemberInfo"
+                        @updateMembers="updateMembers"
+                        @returnInfo="returnInfo"
+                        @infoClose="infoClose" />
+      <GroupMemberInfoModal ref="groupMemberInfoRef"
+                            v-if="dialogShow && dialogType === '群成员信息'"
+                            :currentEntrance="currentEntrance"
+                            @openCode="openCode"
+                            @returnInfo="returnInfo"
+                            @updateInfo="updateInfo"
+                            @infoClose="infoClose"
+                            @openDialog="openDialog" />
       <ChatCommonGroup v-if="dialogType === '共同加入的群'"
                        :commonGroupList="commonGroupList"
-                       @returnFriendInfo="returnFriendInfo"
-                       @friendInfoClose="friendInfoClose" />
-      <ComplaintBox v-if="dialogType === '投诉'"
-                    @returnFriendInfo="returnFriendInfo"
-                    @friendInfoClose="friendInfoClose" />
+                       @returnInfo="returnInfo"
+                       @infoClose="infoClose" />
+      <ComplaintBox v-if="dialogShow && dialogType === '投诉'"
+                    @returnInfo="returnInfo"
+                    @infoClose="infoClose" />
       <ChatImg v-if="dialogType === '图片'"
-               @returnFriendInfo="returnFriendInfo"
-               @friendInfoClose="friendInfoClose"
-               :chat="chat" />
+               @returnInfo="returnInfo"
+               @infoClose="infoClose"
+               :currentEntrance="currentEntrance"
+               :chat="currentEntrance === '群成员信息' ? groupMemberChat :chat" />
       <ChatFile v-if="dialogType === '文件'"
-                @returnFriendInfo="returnFriendInfo"
-                @friendInfoClose="friendInfoClose"
-                :chat="chat" />
+                @returnInfo="returnInfo"
+                @infoClose="infoClose"
+                :currentEntrance="currentEntrance"
+                :chat="currentEntrance === '群成员信息' ? groupMemberChat :chat" />
       <ChatVideo v-if="dialogType === '视频'"
-                 @returnFriendInfo="returnFriendInfo"
-                 @friendInfoClose="friendInfoClose"
-                 :chat="chat" />
+                 @returnInfo="returnInfo"
+                 @infoClose="infoClose"
+                 :currentEntrance="currentEntrance"
+                 :chat="currentEntrance === '群成员信息' ? groupMemberChat :chat" />
+      <Qrcode ref="qrcodeRef"
+              v-if="dialogType === '二维码'"
+              :currentEntrance="currentEntrance"
+              @returnInfo="returnInfo" />
       <div class="delete-all"
            v-if="dialogType === '远程删除'">
         <p>你确定要删除此条消息？</p>
@@ -271,6 +309,8 @@
         </div>
       </div>
     </el-dialog>
+    <right-menu ref="rightMenu"
+                @select="onSelectMenu"></right-menu>
   </div>
 </template>
 
@@ -294,6 +334,11 @@ import ComplaintBox from '@/components/common/ComplaintBox.vue';
 import ChatFile from "./ChatFile.vue";
 import ChatImg from "./ChatImg.vue";
 import ChatVideo from "./ChatVideo.vue";
+import RightMenu from '@/components/common/RightMenu.vue';
+import GroupInfoModal from "../group/GroupInfoModal.vue";
+import GroupMemberModal from "../group/GroupMemberModal.vue";
+import GroupMemberInfoModal from "../group/GroupMemberInfoModal.vue";
+import Qrcode from '../common/Qrcode.vue'
 export default {
   name: "chatPrivate",
   components: {
@@ -315,7 +360,12 @@ export default {
     ComplaintBox,
     ChatImg,
     ChatFile,
-    ChatVideo
+    ChatVideo,
+    RightMenu,
+    GroupInfoModal,
+    GroupMemberModal,
+    GroupMemberInfoModal,
+    Qrcode
   },
   props: {
     chat: {
@@ -327,6 +377,18 @@ export default {
     showUserInfo: {
       type: Boolean,
       default: false
+    },
+    showComplaint: {
+      type: Boolean,
+      default: false
+    },
+    editRemarkModal: {
+      type: Boolean,
+      default: false
+    },
+    updateNotifyExpireTs: {
+      type: Number,
+      default: 0
     }
   },
   data () {
@@ -348,7 +410,7 @@ export default {
       quoteMessage: null, // 被引用的消息
       reqQueue: [], // 等待发送的请求队列
       isSending: false, // 是否正在发
-      friendInfoModal: false,
+      dialogShow: false,
       editRemarkState: false,
       editMessage: null,// 需要被修改的消息
       isSelected: false,
@@ -357,26 +419,161 @@ export default {
       commonGroupList: [],
       activeSignal: 0,
       deleteAllCheck: false,
-      deleteAllObj: {}
+      deleteAllObj: {},
+      menuItems: [
+        {
+          key: 'CHAKANGERENXINXI',
+          name: '查看个人信息',
+          icon: 'el-icon-delete'
+        },
+        {
+          key: 'XIAOXITONGZHI',
+          name: '关闭消息通知',
+          icon: 'el-icon-delete'
+        },
+        {
+          key: 'BIANJILIANXIREN',
+          name: '编辑联系人',
+        },
+        {
+          key: 'SHANCHULIANXIREN',
+          name: '删除联系人'
+        },
+        {
+          key: 'BIAOWEIWEIDU',
+          name: '标为未读',
+          icon: 'el-icon-delete'
+        },
+        {
+          key: 'DELETE',
+          name: '删除对话',
+          icon: 'el-icon-delete'
+        }, {
+          key: 'QINGCHU',
+          name: '清除历史记录',
+          icon: 'el-icon-delete'
+        }, {
+          key: 'HEIMINGDAN',
+          name: '加入黑名单',
+          icon: 'el-icon-delete'
+        }, {
+          key: 'TOUSU',
+          name: '投诉',
+          icon: 'el-icon-delete'
+        },
+        // {
+        //   key: 'INFO',
+        //   name: '查看资料'
+        // }
+      ],
+      groupInfoModalShow: false,
+      currentEntrance: '',
+      memberInfo: {},
+      backModal: ''
     }
   },
   methods: {
+    // 打开二维码
+    openCode (id, type) {
+      this.dialogType = '二维码'
+      this.dialogShow = true
+      console.log('打开二维码');
+      this.$nextTick(() => {
+        this.$refs.qrcodeRef.open(id, type);
+      })
+    },
+    openMemberInfo (member, type) {
+      this.dialogType = '群成员信息'
+      this.currentEntrance = '群成员信息'
+      this.backModal = type
+      this.memberInfo = member
+      this.dialogShow = true
+      this.$nextTick(() => {
+        this.$refs.groupMemberInfoRef.open(member)
+      })
+    },
+    showMemberInfo (member, type) {
+      this.dialogType = '群成员信息'
+      this.currentEntrance = '群成员信息'
+      this.backModal = type
+      this.memberInfo = member
+      this.$nextTick(() => {
+        this.$refs.groupMemberInfoRef.open(member)
+      })
+    },
+    updateMembers () {
+      this.loadGroup(this.chat.targetId)
+    },
+    onSelectMenu (item) {
+      const isPrivate = this.chat.type === 'PRIVATE';
+      console.log(item.key.toLowerCase(), isPrivate, this.groupMembers);
+      if (isPrivate) {
+        this.$emit(item.key.toLowerCase());
+      } else {
+        console.log('群聊', this.groupMembers);
+
+        this.$emit(item.key.toLowerCase(), this.groupInfo, this.groupMembers);
+      }
+    },
     cleared () {
       this.activeMessageIdx = -1
     },
-    returnFriendInfo () {
-      this.dialogType = '个人信息'
+    returnInfo (type) {
+      if (type === '群成员信息') {
+        this.dialogType = '群成员信息'
+        this.$nextTick(() => {
+          this.$refs.groupMemberInfoRef.open(this.memberInfo)
+        })
+      } else {
+        if (type === 'GROUP') {
+          this.dialogType = this.backModal
+          if (this.dialogType === '群组信息') {
+            this.$nextTick(() => {
+              this.$refs.groupInfoModalRef.open(this.groupInfo)
+            })
+          }
+        } else {
+          const isPrivate = this.chat.type === 'PRIVATE';
+          if (isPrivate) {
+            this.dialogType = '个人信息'
+          } else {
+            this.dialogType = '群组信息'
+            this.$nextTick(() => {
+              this.$refs.groupInfoModalRef.open(this.groupInfo)
+            })
+          }
+        }
+      }
+    },
+    returnGroupInfo () {
+      this.dialogType = '群组信息'
     },
     openDialog (title, list) {
+      console.log('openDialog', this.chat);
       this.commonGroupList = list ? list : []
       this.dialogType = title
     },
-    friendInfoClose (type) {
+    infoClose (type) {
       this.dialogType = ''
-      this.friendInfoModal = type
+      this.currentEntrance = ''
+      this.memberInfo = {}
+      this.dialogShow = type
+      this.$emit('updateInfo', type)
     },
-    updateUserInfo (state) {
-      this.loadFriend(this.chat.targetId)
+    infoModalClose () {
+      this.dialogType = ''
+      this.currentEntrance = ''
+      this.memberInfo = {}
+      this.dialogShow = false
+      this.$emit('updateInfo', false)
+    },
+    updateInfo (state) {
+      const isPrivate = this.chat.type === 'PRIVATE';
+      if (isPrivate) {
+        this.loadFriend(this.chat.targetId)
+      } else {
+        this.loadGroup(this.chat.targetId)
+      }
       this.editRemarkState = state
     },
     handleClose (done) {
@@ -388,12 +585,20 @@ export default {
         })
         .catch(_ => { });
     },
-    showFriendInfo () {
+    showGroupInfo () {
+      this.dialogType = '群组信息'
       this.editRemarkState = false
-      this.friendInfoModal = true
+      this.dialogShow = true
+      console.log('groupInfo', this.groupInfo);
+      this.$nextTick(() => {
+        this.$refs.groupInfoModalRef.open(this.groupInfo)
+      })
+    },
+    showFriendInfo () {
       this.dialogType = '个人信息'
+      this.editRemarkState = false
+      this.dialogShow = true
       console.log('userInfo', this.userInfo);
-
     },
     moveChatToTop () {
       let chatIdx = this.chatStore.findChatIdx(this.chat);
@@ -473,6 +678,8 @@ export default {
       file.chat = this.chat;
     },
     onFileSuccess (url, file) {
+      console.log('file', file);
+
       let data = {
         name: file.name,
         size: file.size,
@@ -488,6 +695,8 @@ export default {
         msgInfo.id = m.id
         this.isReceipt = false;
         this.refreshPlaceHolder();
+        console.log('sendMessageRequest', msgInfo);
+
         this.chatStore.insertMessage(msgInfo, file.chat);
       })
     },
@@ -587,13 +796,114 @@ export default {
       file.msgInfo = msgInfo;
       file.chat = this.chat;
     },
-    onClickMore (type) {
+    onClickMore (e, type) {
       if (type == 1) {
-        this.showSide = !this.showSide;
-        if (this.showSide) {
-          // 刷新一下群和成员信息
-          this.loadGroup(this.group.id);
+        // this.showSide = !this.showSide;
+        // if (this.showSide) {
+        //   // 刷新一下群和成员信息
+        //   this.loadGroup(this.group.id);
+        // }
+        let groupMenuList = [
+          {
+            key: 'MESSAGEINFORM',
+            name: '关闭消息通知',
+            icon: 'el-icon-delete'
+          },
+          {
+            key: 'MANAGEGROUP',
+            name: '管理群组',
+          },
+          {
+            key: 'ADDMEMBER',
+            name: '添加成员'
+          },
+          // {
+          //   key: 'SAVEGROUP',
+          //   name: '保存到群组'
+          // },
+          {
+            key: 'ISUNREAD',
+            name: '标为未读'
+          },
+          {
+            key: 'DELETEGROUP',
+            name: '删除并退出'
+          },
+          {
+            key: 'CLEARRECORD',
+            name: '清空历史记录'
+          },
+          {
+            key: 'COMPLAINT',
+            name: '投诉'
+          }
+        ]
+        if (this.groupInfo.ownerId == this.mine.id) {
+          groupMenuList.forEach(item => {
+            if (item.key === 'DELETEGROUP') {
+              item.name = '解散群组'
+              item.icon = 'el-icon-remove-outline'
+            }
+          })
         }
+        if (this.chat.notifyExpireTs) {
+          groupMenuList.forEach(item => {
+            if (item.key === 'MESSAGEINFORM') {
+              item.name = '开启消息通知'
+              item.icon = 'el-icon-remove-outline'
+            }
+          })
+        } else {
+          this.menuItems.forEach(item => {
+            if (item.key === 'MESSAGEINFORM') {
+              item.name = '关闭消息通知'
+              item.icon = 'el-icon-circle-plus-outline'
+            }
+          })
+        }
+        if (this.groupInfo.dissolve || this.groupInfo.quit) {
+          const list = [
+            {
+              key: 'DELETE',
+              name: '删除会话',
+            },
+          ]
+          this.$refs.rightMenu.open(e, list);
+        } else {
+          this.$refs.rightMenu.open(e, groupMenuList);
+        }
+      } else if (type == 2) {
+        if (this.chat.blacklist) {
+          this.menuItems.forEach(item => {
+            if (item.key === 'HEIMINGDAN') {
+              item.name = '移出黑名单'
+              item.icon = 'el-icon-remove-outline'
+            }
+          })
+        } else {
+          this.menuItems.forEach(item => {
+            if (item.key === 'HEIMINGDAN') {
+              item.name = '加入黑名单'
+              item.icon = 'el-icon-circle-plus-outline'
+            }
+          })
+        }
+        if (this.chat.notifyExpireTs) {
+          this.menuItems.forEach(item => {
+            if (item.key === 'XIAOXITONGZHI') {
+              item.name = '开启消息通知'
+              item.icon = 'el-icon-remove-outline'
+            }
+          })
+        } else {
+          this.menuItems.forEach(item => {
+            if (item.key === 'XIAOXITONGZHI') {
+              item.name = '关闭消息通知'
+              item.icon = 'el-icon-circle-plus-outline'
+            }
+          })
+        }
+        this.$refs.rightMenu.open(e, this.menuItems);
       }
     },
     onScroll (e) {
@@ -843,11 +1153,11 @@ export default {
     onDeleteAllMessage (msgInfo) {
       this.deleteAllObj = msgInfo
       this.dialogType = '远程删除'
-      this.friendInfoModal = true
+      this.dialogShow = true
     },
     deleteAllClose () {
       this.dialogType = ''
-      this.friendInfoModal = false
+      this.dialogShow = false
     },
     deleteAllSbm () {
       let data = {
@@ -920,12 +1230,12 @@ export default {
     },
     complaintOpen () {
       this.dialogType = '投诉';
-      this.friendInfoModal = true;
+      this.dialogShow = true;
     },
     // 取消选择
     onCloseSelected () {
-      this.isSelected = false;
       this.selectMessageList = []
+      this.isSelected = false;
     },
     // 选择消息
     onSelectMessage (msgInfo) {
@@ -980,13 +1290,22 @@ export default {
               this.chatStore.openChat(chat)
               this.chatStore.insertMessage(m, chat)
               if (++finish === total) {
-                this.$message.success('转发成功')
                 this.onCloseSelected()
+                this.$message.success('转发成功')
               }
             })
           })
         })
       })
+    },
+    // 多选删除消息
+    delMessage () {
+      if (!this.selectMessageList.length) {
+        return
+      }
+      const msgs = this.selectMessageList
+      console.log(msgs);
+
     },
     // 撤回消息
     onRecallMessage (msgInfo) {
@@ -1037,10 +1356,14 @@ export default {
     locateMessage (msgInfo) {
       // 寻找消息位置
       const idx = this.findMessageIdx(msgInfo);
+      console.log(idx);
+
       if (idx < 0) {
         this.$message.error("无法定位原消息");
         return;
       }
+      console.log(this.showMinIdx);
+
       // 要定位到消息，首先要渲染这条消息
       if (this.showMinIdx > idx) {
         this.showMinIdx = Math.min(this.showMinIdx, Math.max(idx - 10, 0));
@@ -1104,15 +1427,30 @@ export default {
         url: `/group/find/${groupId}`,
         method: 'get'
       }).then((group) => {
+        this.$emit('updateGroupInfo', group)
         this.groupInfo = group
+        this.groupStore.setGroupInfo(group)
         this.chatStore.updateChatFromGroup(group);
+        this.chatStore.addNotify(group.id, group.notifyExpireTs)
         this.groupStore.updateGroup(group);
       });
       this.$http({
         url: `/group/members/${groupId}`,
         method: 'get'
       }).then((groupMembers) => {
+        this.$emit('updateGroupMembers', groupMembers)
+        this.groupStore.setCurrentGroupMember(groupMembers);
         this.groupMembers = groupMembers;
+        groupMembers.forEach((member) => {
+          // 群主权限
+          if (this.mine.id == this.groupInfo.ownerId && member.userId == this.mine.id) {
+            this.groupStore.setGroupPermission(member);
+          }
+          // 管理员权限
+          if (this.mine.id != this.groupInfo.ownerId && member.isManager) {
+            this.groupStore.setGroupPermission(member);
+          }
+        });
       });
     },
     updateFriendInfo () {
@@ -1158,12 +1496,14 @@ export default {
       }
     },
     headImage (msgInfo) {
-      if (this.isGroup) {
-        let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);
-        return member ? member.headImage : "";
-        // return member.headImage;
-      } else {
-        return msgInfo.selfSend ? this.mine.headImageThumb : this.chat.headImage
+      // console.log(msgInfo);
+      if (msgInfo) {
+        if (this.isGroup) {
+          let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);
+          return member ? member.headImage : "";
+        } else {
+          return msgInfo.selfSend ? this.mine.headImageThumb : this.chat.headImage
+        }
       }
     },
     resetEditor () {
@@ -1278,7 +1618,6 @@ export default {
         (this.isGroup && this.group.isBanned)
     },
     isGroup () {
-      console.log('isGroup', this.chat.type == 'GROUP');
       return this.chat.type == 'GROUP';
     },
     isPrivate () {
@@ -1286,9 +1625,24 @@ export default {
     },
     userInfoData () {
       return this.friendStore.friendInfo
+    },
+    groupMemberChat () {
+      console.log(this.chatStore.groupMemberChat);
+
+      return this.chatStore.groupMemberChat
     }
   },
   watch: {
+    updateNotifyExpireTs: {
+      handler (value) {
+        console.log('updateNotifyExpireTs', value);
+
+        if (value !== null && value !== undefined) {
+          const isPrivate = this.chat.type === 'PRIVATE';
+          isPrivate ? this.loadFriend(this.chat.targetId) : this.loadGroup(this.chat.targetId)
+        }
+      }, immediate: true
+    },
     chat: {
       handler (newChat, oldChat) {
         const isChanged = !oldChat ||
@@ -1333,7 +1687,8 @@ export default {
     editRemarkState: {
       handler (value) {
         if (value) {
-          this.loadFriend(this.chat.targetId)
+          const isPrivate = this.chat.type === 'PRIVATE';
+          isPrivate ? this.loadFriend(this.chat.targetId) : this.loadGroup(this.chat.targetId)
         }
       }
     },
@@ -1341,8 +1696,30 @@ export default {
       handler (value) {
         if (value) {
           this.editRemarkState = false
-          this.friendInfoModal = true
+          this.dialogShow = true
           this.dialogType = '个人信息'
+        }
+      }
+    },
+    showComplaint: {
+      handler (value) {
+        if (value) {
+          this.editRemarkState = false
+          this.dialogShow = true
+          this.dialogType = '投诉'
+        }
+      }
+    },
+    editRemarkModal: {
+      handler (value) {
+        if (value) {
+          this.editRemarkState = false
+          this.dialogShow = true
+          this.dialogType = '个人信息'
+
+          this.$nextTick(() => {
+            this.$refs.friendInfoRef.editRemark()
+          })
         }
       }
     }
@@ -1378,7 +1755,6 @@ export default {
         width: 100%;
         height: 100%;
         padding: 0 12px;
-        background: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1653,8 +2029,10 @@ export default {
       border-left: var(--im-border);
     }
   }
-  .el-dialog__body {
-    padding: 10px 0px !important;
+  .dialog-box-info {
+    .el-dialog__body {
+      padding: 10px 0px !important;
+    }
   }
   .el-dialog {
     border-radius: 15px;

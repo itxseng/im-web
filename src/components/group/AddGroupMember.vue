@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="邀请好友"
+  <el-dialog title="添加成员"
              :visible.sync="show"
              width="620px"
              :before-close="close"
@@ -152,7 +152,7 @@ export default {
         headImage: group.headImage,
       };
       this.chatStore.openChat(chat);
-      this.chatStore.setActiveChat(group.id);
+      this.chatStore.setActiveChat(group.id,'GROUP');
       // 判断是否需要跳转到聊天界面
       if (this.$route.path !== '/home/chat') {
         this.$router.push("/home/chat");
@@ -201,6 +201,7 @@ export default {
 
     .agm-l-box {
       flex: 1;
+      width: 100%;
       overflow: hidden;
       border: var(--im-border);
 
@@ -216,7 +217,10 @@ export default {
       }
 
       .agm-friend-checkbox {
-        margin-right: 20px;
+        width: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 
@@ -241,5 +245,8 @@ export default {
         color: var(--im-text-color-light);
       }
     }
+  }
+  .el-scrollbar__wrap {
+    width: 100%;
   }
 </style>

@@ -360,7 +360,7 @@ export default {
           li {
             cursor: pointer;
             &:hover {
-              background-color: #e2e9fc;
+              background-color: #658efe;
             }
             ::v-deep .el-input__inner {
               cursor: pointer;

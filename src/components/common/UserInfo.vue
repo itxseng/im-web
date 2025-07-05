@@ -74,7 +74,7 @@ export default {
 				headImage: user.headImage,
 			};
 			this.chatStore.openChat(chat);
-			this.chatStore.setActiveChat(this.user.id);
+			this.chatStore.setActiveChat(this.user.id,'PRIVATE');
 			if (this.$route.path != "/home/chat") {
 				this.$router.push("/home/chat");
 			}

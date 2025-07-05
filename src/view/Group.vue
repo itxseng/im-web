@@ -343,7 +343,7 @@ export default {
         headImage: group.headImage,
       };
       this.chatStore.openChat(chat);
-      this.chatStore.setActiveChat(0);
+      this.chatStore.setActiveChat(group.id,'GROUP');
       this.$router.push("/home/chat");
     },
     onScroll(e) {
@@ -402,6 +402,8 @@ export default {
       return member && member.showNickName;
     },
     isOwner() {
+      console.log(this.activeGroup);
+      
       return this.activeGroup.ownerId == this.mine.id;
     },
     isManager() {

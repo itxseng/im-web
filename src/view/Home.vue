@@ -346,6 +346,8 @@ export default {
       }
     },
     insertPrivateMessage (friend, msg) {
+      console.log("insertPrivateMessage", friend, msg);
+      
       let chatInfo = {
         type: 'PRIVATE',
         targetId: friend.id,
@@ -415,7 +417,14 @@ export default {
       if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_TOP_MESSAGE) {
         let topMessage = msg.content ? JSON.parse(msg.content) : null;
         console.log("置顶消息:", topMessage)
-        this.groupStore.updateTopMessage(msg.groupId, topMessage);
+          this.groupStore.updateTopMessage(msg.groupId, topMessage);
+        return;
+      }
+      // 群消息置顶移除
+      if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_REMOVE_TOP_MESSAGE) {
+        let topMessage = msg.content ? JSON.parse(msg.content) : null;
+        console.log("移除置顶消息:", topMessage)
+          this.groupStore.deleteTopMessage(msg.groupId, topMessage);
         return;
       }
       // 群视频信令

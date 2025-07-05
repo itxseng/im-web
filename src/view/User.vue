@@ -1,6 +1,6 @@
 <template>
   <el-container class="user-page">
-    <el-aside width="30%"
+    <el-aside width="350px"
               class="user-box">
       <div class="user-header">
         <el-input class="search-text"
@@ -338,7 +338,7 @@ export default {
         }
         .item-click,
         li:hover {
-          background-color: #e2e9fc;
+          background-color: #658efe;
         }
         .line {
           width: 100%;

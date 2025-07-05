@@ -3,7 +3,7 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>视频</p>
     </div>
     <div class="content">
@@ -25,7 +25,7 @@
                      @loadedmetadata="getDuration($event, i)"
                      :poster="JSON.parse(value.content).coverUrl"
                      :src="JSON.parse(value.content).videoUrl" />
-                     <!-- {{JSON.parse(value.content)}} -->
+              <!-- {{JSON.parse(value.content)}} -->
               <div class="video-duration">
                 <span class="icon"></span>
                 <span class="time">{{ formatTime(durations[i] || 0) }}</span>
@@ -51,11 +51,19 @@ export default {
       default: function () {
         return {}
       }
+    },
+    currentEntrance: {
+      type: String,
+      default: ''
     }
   },
   methods: {
-    returnFriendInfo () {
-      this.$emit('returnFriendInfo')
+    returnInfo () {
+      if (this.currentEntrance === '群成员信息') {
+        this.$emit('returnInfo', '群成员信息')
+      } else {
+        this.$emit('returnInfo')
+      }
     },
     transitionJson (content) {
       return JSON.parse(content)

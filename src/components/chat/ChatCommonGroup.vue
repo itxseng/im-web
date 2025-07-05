@@ -3,21 +3,20 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>共同加入的群</p>
     </div>
     <ul class="content"
         v-if="commonGroupList && commonGroupList.length > 0">
-      <template v-for="(item,index) in commonGroupList">
-        <li :key="index"
-            @click="onSendMessage(item)">
-          <div class="content-img">
-            <img :src="item.headImageThumb"
-                 alt="">
-          </div>
-          <div class="content-text">{{item.name}}</div>
-        </li>
-      </template>
+      <li v-for="(item,index) in commonGroupList"
+          :key="index"
+          @click="onSendMessage(item)">
+        <div class="content-img">
+          <img :src="item.headImageThumb"
+               alt="">
+        </div>
+        <div class="content-text">{{item.name}}</div>
+      </li>
     </ul>
     <NoDataTip v-else />
   </div>
@@ -42,8 +41,8 @@ export default {
     }
   },
   methods: {
-    returnFriendInfo () {
-      this.$emit('returnFriendInfo')
+    returnInfo () {
+      this.$emit('returnInfo')
     },
     onSendMessage (group) {
       let chat = {
@@ -53,8 +52,8 @@ export default {
         headImage: group.headImageThumb,
       };
       this.chatStore.openChat(chat);
-      this.chatStore.setActiveChat(group.id);
-      this.$emit('friendInfoClose', false)
+      this.chatStore.setActiveChat(group.id,'GROUP');
+      this.$emit('infoClose', false)
       // this.$router.push("/home/chat");
     }
   }

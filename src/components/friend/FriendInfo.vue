@@ -3,6 +3,8 @@
     <div class="title">
       <span>个人信息</span>
       <div class="title-icon">
+        <span class="title-icon-code"
+              @click="openCode"></span>
         <span class="title-icon-phone"
               @click="showPrivateVideo('voice')"></span>
         <span class="title-icon-video"
@@ -29,70 +31,79 @@
     </div>
     <div class="content">
       <ul>
-        <li @click="onCloseModal">
-          <span class="icon linkman-icon"></span>
-          <span class="text text-color">联系人</span>
-        </li>
-        <li @click="onSendCard">
-          <span class="icon share-icon"></span>
-          <span class="text text-color">分享名片</span>
-        </li>
-        <li>
-          <div class="left">
-            <span class="icon inform-icon"></span>
-            <span class="text">消息通知</span>
-          </div>
-          <span class="right">
-            <el-switch :value="message"
-                       @change="onSwitchMessageChange"
-                       active-color="#99B6FF"
-                       inactive-color="#B1B1B1">
-            </el-switch>
-          </span>
-        </li>
-        <li @click="openModal('图片')" v-if="imageAmount > 0">
-          <span class="icon image-icon"></span>
-          <span class="text">{{ imageAmount }}张图片</span>
-        </li>
-        <li @click="openModal('视频')" v-if="videoAmount > 0">
-          <span class="icon video-icon"></span>
-          <span class="text">{{ videoAmount }}个视频</span>
-        </li>
-        <li @click="openModal('文件')" v-if="fileAmount > 0">
-          <span class="icon files-icon"></span>
-          <span class="text">{{ fileAmount }}个文件</span>
-        </li>
-        <li @click="openModal('共同加入的群', commonGroupList)">
-          <span class="icon group_chat-icon"></span>
-          <span class="text">{{ commonGroupList.length }}个共同加入的群聊</span>
-        </li>
-        <li>
-          <div class="left"
-               @click="setStarFriend">
-            <span class="icon star-icon"></span>
-            <span class="text">设为星标朋友</span>
-          </div>
-          <span class="right">
-            <el-switch v-model="star"
-                       @change="starChange"
-                       active-color="#99B6FF"
-                       inactive-color="#B1B1B1">
-            </el-switch>
-          </span>
-        </li>
-        <li>
-          <div class="left">
-            <span class="icon blacklist-icon"></span>
-            <span class="text">加入黑名单</span>
-          </div>
-          <span class="right">
-            <el-switch v-model="blacklist"
-                       @change="blacklistChange"
-                       active-color="#99B6FF"
-                       inactive-color="#B1B1B1">
-            </el-switch>
-          </span>
-        </li>
+        <div class="ul-li-border">
+          <li @click="onCloseModal">
+            <span class="icon linkman-icon"></span>
+            <span class="text text-color">联系人</span>
+          </li>
+          <li @click="onSendCard">
+            <span class="icon share-icon"></span>
+            <span class="text text-color">分享名片</span>
+          </li>
+        </div>
+        <div class="ul-li-border">
+          <li>
+            <div class="left">
+              <span class="icon inform-icon"></span>
+              <span class="text">消息通知</span>
+            </div>
+            <span class="right">
+              <el-switch :value="message"
+                         @change="onSwitchMessageChange"
+                         active-color="#99B6FF"
+                         inactive-color="#B1B1B1">
+              </el-switch>
+            </span>
+          </li>
+          <li>
+            <div class="left"
+                 @click="setStarFriend">
+              <span class="icon star-icon"></span>
+              <span class="text">设为星标朋友</span>
+            </div>
+            <span class="right">
+              <el-switch v-model="star"
+                         @change="starChange"
+                         active-color="#99B6FF"
+                         inactive-color="#B1B1B1">
+              </el-switch>
+            </span>
+          </li>
+          <li>
+            <div class="left">
+              <span class="icon blacklist-icon"></span>
+              <span class="text">加入黑名单</span>
+            </div>
+            <span class="right">
+              <el-switch v-model="blacklist"
+                         @change="blacklistChange"
+                         active-color="#99B6FF"
+                         inactive-color="#B1B1B1">
+              </el-switch>
+            </span>
+          </li>
+        </div>
+        <div class="ul-li-border">
+          <li @click="openModal('图片')"
+              v-if="imageAmount > 0">
+            <span class="icon image-icon"></span>
+            <span class="text">{{ imageAmount }}张图片</span>
+          </li>
+          <li @click="openModal('视频')"
+              v-if="videoAmount > 0">
+            <span class="icon video-icon"></span>
+            <span class="text">{{ videoAmount }}个视频</span>
+          </li>
+          <li @click="openModal('文件')"
+              v-if="fileAmount > 0">
+            <span class="icon files-icon"></span>
+            <span class="text">{{ fileAmount }}个文件</span>
+          </li>
+          <li @click="openModal('共同加入的群', commonGroupList)">
+            <span class="icon group_chat-icon"></span>
+            <span class="text">{{ commonGroupList.length }}个共同加入的群聊</span>
+          </li>
+        </div>
         <li @click="openModal('投诉')">
           <span class="icon complaint-icon"></span>
           <span class="text">投诉</span>
@@ -109,7 +120,7 @@
     </div>
     <el-dialog append-to-body
                :visible.sync="editRemarkModal"
-               width="25%"
+               width="40%"
                :before-close="handleClose">
       <div class="edit-remark-modal-content">
         <p>编辑备注</p>
@@ -186,6 +197,10 @@ export default {
       type: Boolean,
       default: false
     },
+    editRemarkShow: {
+      type: Boolean,
+      default: false
+    },
     itemIndex: {
       type: Number
     },
@@ -232,6 +247,9 @@ export default {
     }
   },
   methods: {
+    openCode () {
+      this.$emit('openCode', this.userInfoData.id,2)
+    },
     // 语音、视频
     showPrivateVideo (mode) {
       console.log("showPrivateVideo", mode);
@@ -255,6 +273,7 @@ export default {
     },
     // 修改备注
     editRemark () {
+      console.log('open');
       this.editRemarkValue = this.userInfo.remarkNickName
       this.editRemarkModal = true
     },
@@ -282,7 +301,7 @@ export default {
           this.friendStore.updateFriend(friend);
         })
       this.editRemarkModal = false
-      this.$emit('updateUserInfo', true)
+      this.$emit('updateInfo', true)
     },
     // 切换
     blacklistChange () {
@@ -346,7 +365,7 @@ export default {
     },
     // 关闭弹框
     onCloseModal () {
-      this.$emit('friendInfoClose', false)
+      this.$emit('infoClose', false)
     },
     // popover关闭
     popoverClose () {
@@ -395,7 +414,7 @@ export default {
         chats.forEach(chat => {
           let cardData = {
             userId: this.friend.id,
-            nickName: this.friend.showNickName,
+            nickName: this.friend.nickName,
             headImage: this.friend.headImage,
           }
           let msgInfo = {};
@@ -449,7 +468,7 @@ export default {
         } else {
           this.message = true;
         }
-        this.$emit('updateUserInfo', true);
+        this.$emit('updateInfo', true);
       });
     },
     getCommonGroupList (friendId, page, size) {
@@ -478,7 +497,7 @@ export default {
       }).then(() => {
         this.$message.success("设置成功");
         this.chatStore.setStar(this.userInfoData.id, type)
-        this.$emit('updateUserInfo', true);
+        this.$emit('updateInfo', true);
       })
     }
   },
@@ -551,11 +570,18 @@ export default {
       justify-content: space-between;
       box-sizing: border-box;
       .title-icon {
-        width: 50px;
+        width: 80px;
         height: 100%;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        .title-icon-code {
+          width: 18px;
+          height: 18px;
+          background: url("../../assets/icon/QRCode.png") no-repeat center;
+          background-size: 100%;
+          cursor: pointer;
+        }
         .title-icon-phone {
           width: 18px;
           height: 18px;
@@ -732,13 +758,7 @@ export default {
         li:hover {
           background-color: #ededed;
         }
-        li:nth-child(2) {
-          border-bottom: 5px solid #d9d9d9;
-        }
-        li:nth-child(6) {
-          border-bottom: 5px solid #d9d9d9;
-        }
-        li:nth-child(9) {
+        .ul-li-border {
           border-bottom: 5px solid #d9d9d9;
         }
       }
@@ -751,7 +771,7 @@ export default {
     p {
       padding: 0px;
       margin: 0px;
-      font-size: 20px;
+      font-size: 18px;
       color: #999;
       margin-bottom: 20px;
     }

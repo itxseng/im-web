@@ -35,6 +35,7 @@ export default {
                     x: e.x + 30,
                     y: e.y
                 }
+                this.groupStore.setGroupInfo(group)
                 this.$eventBus.$emit("openGroupInfo", group, pos);
             })
         }

@@ -1,7 +1,6 @@
 import { MESSAGE_TYPE, MESSAGE_STATUS } from "../api/enums.js"
 import { defineStore } from 'pinia';
 import useUserStore from './userStore.js';
-import friendStore from './friendStore.js';
 import localForage from '../utils/electronForage.js';
 import http from '../api/httpRequest.js'
 
@@ -26,16 +25,21 @@ export default defineStore('chatStore', {
   state: () => {
     return {
       activeChat: null,
+      groupMemberChat: null,
       privateMsgMaxId: 0,
       groupMsgMaxId: 0,
       systemMsgMaxSeqNo: 0,
       loadingPrivateMsg: false,
       loadingGroupMsg: false,
       loadingSystemMsg: false,
-      chats: []
+      chats: [],
+      chatLoading: false
     }
   },
   actions: {
+    setChatLoading (type) {
+      this.chatLoading = type;
+    },
     initChats (chatsData) {
       this.chats = [];
       this.privateMsgMaxId = chatsData.privateMsgMaxId || 0;
@@ -114,16 +118,32 @@ export default defineStore('chatStore', {
 
       this.saveToStorage();
     },
-    setActiveChat (idx) {
+    setActiveChat (idx, type) {
       let chats = this.findChats()
       // 根据chatInfo.id 找到对应的 chat
       let arr = []
       chats.forEach(chat => {
-        if (chat.targetId == idx) {
+        if (chat.targetId == idx && chat.type == type) {
+
+          console.log(chat);
+
           arr = chat;
         }
       });
       this.activeChat = arr;
+      this.saveToStorage();
+    },
+    setGroupMemberChat (idx) {
+      let chats = this.findChats()
+      // 根据chatInfo.id 找到对应的 chat
+      let arr = []
+      chats.forEach(chat => {
+        console.log(chat.targetId, idx);
+        if (chat.targetId == idx) {
+          arr = chat;
+        }
+      });
+      this.groupMemberChat = arr;
       this.saveToStorage();
     },
     setUnreadCount (id) {
@@ -240,12 +260,28 @@ export default defineStore('chatStore', {
       });
       this.saveToStorage()
     },
+    // 删除对话
     removeChat (idx) {
       let chats = this.findChats()
       if (chats[idx] == this.activeChat) {
         this.activeChat = null;
       }
       chats[idx].delete = true;
+      chats[idx].stored = false;
+      this.saveToStorage()
+    },
+    // 删除聊天记录
+    removeRecord (idx) {
+      let chats = this.findChats()
+      chats[idx].messages = [];
+      const userStore = useUserStore();
+      let userId = userStore.userInfo.id;
+      let key = "chats-" + userId;
+      let chatKey = `${key}-${chats[idx].type}-${chats[idx].targetId}`
+      this.setChatLoading(true)
+      localForage.removeItem(chatKey).then(() => {
+        this.setChatLoading(false)
+      });
       chats[idx].stored = false;
       this.saveToStorage()
     },
@@ -717,11 +753,11 @@ export default defineStore('chatStore', {
                   chat.messages = coldChat.messages.concat(hotChat
                     .messages)
                 }
-                // if (chat.targetId == 2) {
-                //   console.log("chat.messages.length1:", coldChat.messages.length)
-                //   console.log("chat.messages.length2:", hotChat.messages.length)
-                //   console.log("chat.messages.length3:", chat.messages.length)
-                // }
+                if (chat.targetId == 2) {
+                  console.log("chat.messages.length1:", coldChat.messages.length)
+                  console.log("chat.messages.length2:", hotChat.messages.length)
+                  console.log("chat.messages.length3:", chat.messages.length)
+                }
                 chatsData.chats.push(chat);
               }
               this.initChats(chatsData);

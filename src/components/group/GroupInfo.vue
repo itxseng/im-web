@@ -68,7 +68,7 @@ export default {
 				headImage: this.group.headImage,
 			};
 			this.chatStore.openChat(chat);
-			this.chatStore.setActiveChat(0);
+			this.chatStore.setActiveChat(this.group.id,'GROUP');
 			if (this.$route.path != "/home/chat") {
 				this.$router.push("/home/chat");
 			}

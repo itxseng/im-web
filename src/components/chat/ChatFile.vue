@@ -3,7 +3,7 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>文件</p>
     </div>
     <div class="content">
@@ -19,7 +19,10 @@
                 :key="i">
               <div class="file-box">
                 <div class="file-box-icon">
-                  <div class="icon"></div>
+                  <downloadFile :bg="'#00000048'"
+                                :iconWidth="'35px'"
+                                :chat="chat"
+                                :msgInfo="value" />
                 </div>
               </div>
               <div class="file-info">
@@ -39,8 +42,12 @@
   </div>
 </template>
 <script>
-import { filtrationTime,groupByMonth } from '@/utils/filtration.js'
+import { filtrationTime, groupByMonth } from '@/utils/filtration.js'
+import downloadFile from '@/components/common/downloadFile.vue'
 export default {
+  components: {
+    downloadFile
+  },
   data () {
     return {
     }
@@ -51,11 +58,19 @@ export default {
       default: function () {
         return {}
       }
+    },
+    currentEntrance: {
+      type: String,
+      default: ''
     }
   },
   methods: {
-    returnFriendInfo () {
-      this.$emit('returnFriendInfo')
+    returnInfo () {
+      if (this.currentEntrance === '群成员信息') {
+        this.$emit('returnInfo', '群成员信息')
+      } else {
+        this.$emit('returnInfo')
+      }
     },
     transitionJson (content) {
       return JSON.parse(content)

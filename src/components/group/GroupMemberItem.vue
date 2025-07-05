@@ -148,7 +148,7 @@ export default {
                 headImage: friend.headImage,
             };
             this.chatStore.openChat(chat);
-            this.chatStore.setActiveChat(0);
+            this.chatStore.setActiveChat(friend.id,'PRIVATE');
         },
         applyFriend() {
             this.$http({

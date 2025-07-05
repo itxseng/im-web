@@ -1,6 +1,6 @@
 <template>
   <el-container class="chat-page">
-    <el-aside width="30%"
+    <el-aside width="350px"
               class="chat-list-box">
       <div class="chat-list-header">
         <el-input class="search-text"
@@ -12,7 +12,7 @@
         </el-input>
         <div class="chat-list-header-btn">
           <el-popover placement="top-start"
-                      width="100"
+                      :width="80"
                       trigger="hover">
             <div class="chat-list-header-btn-list">
               <div class="friend"
@@ -20,10 +20,15 @@
                 <span class="icon"></span>
                 <span>添加联系人</span>
               </div>
+              <!-- <div class="group"
+                   @click="addGroup">
+                <span class="icon"></span>
+                <span>添加群组</span>
+              </div> -->
               <div class="group"
                    @click="onCreateGroup">
                 <span class="icon"></span>
-                <span>新建群聊</span>
+                <span>新建群组</span>
               </div>
             </div>
             <i class="el-icon-plus"
@@ -54,31 +59,72 @@
                      @biaoweiweidu="setUnread"
                      @heimingdan="blacklist"
                      @chakangerenxinxi="showFriendInfo(chat)"
+                     @xiaoxitongzhi="closeNotify(chat)"
+                     @qingchu="clearChat(chat)"
+                     @tousu="complaint(chat)"
                      :active="chat === chatStore.activeChat"></chat-item>
         </div>
       </el-scrollbar>
       <NavBar v-if="!loading" />
     </el-aside>
-    <el-container class="chat-box">
+    <el-container class="chat-box"
+                  v-loading="chatLoading">
       <div class="img-box"
            v-if="!activeChat">
         <img src="@/assets/bg-logo.png"
              alt="">
       </div>
-      <chat-box v-if="activeChat && activeChat.type != 'SYSTEM'"
+      <chat-box ref="ChatBoxRef"
+                v-if="activeChat && activeChat.type != 'SYSTEM'"
                 :chat="activeChat"
                 :itemIndex="isShow"
-                :showUserInfo="showUserInfo"></chat-box>
+                :showUserInfo="showUserInfo"
+                :showComplaint="showComplaint"
+                :editRemarkModal="editRemarkModal"
+                :updateNotifyExpireTs="updateNotifyExpireTs"
+                @updateGroupInfo="updateGroupInfo"
+                @updateGroupMembers="updateGroupMembers"
+                @updateInfo="updateInfo"
+                @delete="onDelItem(activeChat)"
+                @top="onTop(activeChat)"
+                @info="onShowInfo(activeChat)"
+                @unpinfromtop="unpinFromTop(activeChat)"
+                @biaoweiweidu="setUnread"
+                @heimingdan="blacklist"
+                @chakangerenxinxi="showFriendInfo(activeChat)"
+                @xiaoxitongzhi="closeNotify(activeChat)"
+                @qingchu="clearChat(activeChat)"
+                @tousu="complaint(activeChat)"
+                @shanchulianxiren="delLinkman(activeChat)"
+                @bianjilianxiren="editLinkman(activeChat)"
+                @messageinform="closeNotify(activeChat)"
+                @managegroup="manageGroup"
+                @addmember="addMember"
+                @isunread="setUnread(activeChat)"
+                @deletegroup="deleteGroup"
+                @clearrecord="clearChat(activeChat)"></chat-box>
       <chat-system-box v-if="activeChat && activeChat.type == 'SYSTEM'"
                        :chat="activeChat"></chat-system-box>
       <add-friend :dialogVisible="showAddFriend"
                   @close="onCloseAddFriend"></add-friend>
       <el-dialog :visible.sync="dialogModal"
-                 width="450px"
+                 :width="dialogModalWidth"
                  :destroy-on-close="true">
-        <CreateGroup @reload="dialogModalClose"
+        <CreateGroup v-if="dialogType == 'createGroup' && dialogModal"
+                     @reload="dialogModalClose"
                      @close="dialogModalClose" />
+        <GroupManagementModal v-if="dialogType == 'groupManagement' && dialogModal"
+                              @close="dialogModalClose"
+                              @updateGroupData="updateGroupData"
+                              :groupInfo="groupInfo"
+                              :groupMembers="groupMembers" />
       </el-dialog>
+      <AddGroupModal  ref="addGroup" />
+      <AddGroupMember :groupId="groupInfo.id"
+                      ref="addGroupMember"
+                      :members="groupMembers"
+                      :appendToBody="true"
+                      @reload="updateGroupData" />
     </el-container>
   </el-container>
 </template>
@@ -90,6 +136,9 @@ import ChatSystemBox from "../components/chat/ChatSystemBox.vue";
 import NavBar from "../components/navBar/index.vue";
 import AddFriend from "@/components/friend/AddFriend.vue";
 import CreateGroup from "@/components/group/CreateGroup.vue";
+import AddGroupModal from "@/components/group/AddGroupModal.vue";
+import GroupManagementModal from "@/components/group/GroupManagementModal.vue";
+import AddGroupMember from "../components/group/AddGroupMember.vue";
 export default {
   name: "chat",
   components: {
@@ -98,7 +147,10 @@ export default {
     ChatSystemBox,
     NavBar,
     AddFriend,
-    CreateGroup
+    CreateGroup,
+    GroupManagementModal,
+    AddGroupMember,
+    AddGroupModal
   },
   data () {
     return {
@@ -116,27 +168,53 @@ export default {
       selectMessageList: [],
       dialogType: '',
       commonGroupList: [],
-      showUserInfo: false
+      removeLoading: null,
+      showUserInfo: false,
+      showComplaint: false,
+      editRemarkModal: false,
+      updateNotifyExpireTs: 0,
+      dialogModalWidth: '450px',
+      chat: {},
+      groupInfo: {}
     }
   },
   methods: {
+    updateInfo (type) {
+      this.showUserInfo = type
+      this.showComplaint = type
+      this.editRemarkModal = type
+    },
     dialogModalClose () {
+      this.dialogType = ''
       this.dialogModal = false;
     },
     onCreateGroup () {
+      this.dialogModalWidth = '450px'
       this.dialogModal = true;
+      this.dialogType = 'createGroup';
+    },
+    addGroup () {
+      this.$refs.addGroup.open()
     },
     onCloseAddFriend () {
       this.showAddFriend = false;
     },
     onActiveItem (item, index) {
-      this.showUserInfo = false
       this.isShow = index
-      this.chatStore.setActiveChat(item.targetId);
+      this.chatStore.setActiveChat(item.targetId, item.type);
     },
     onDelItem (chat) {
+      const isPrivate = chat.type === 'PRIVATE';
+      if (isPrivate) {
+        const idx = this.chatStore.findChatIdx(chat)
+        this.chatStore.removeChat(idx);
+      } else {
+        this.chatStore.removeGroupChat(chat.targetId);
+      }
+    },
+    clearChat (chat) {
       const idx = this.chatStore.findChatIdx(chat)
-      this.chatStore.removeChat(idx);
+      this.chatStore.removeRecord(idx);
     },
     onTop (chat) {
       const idx = this.chatStore.findChatIdx(chat)
@@ -152,6 +230,26 @@ export default {
         }
         this.$router.push("/home/group?id=" + chat.targetId);
       }
+    },
+    // 关闭消息通知
+    closeNotify (chat) {
+      const isPrivate = chat.type === 'PRIVATE';
+      const url = isPrivate ? '/friend/notify/expire' : '/group/notify/expire';
+      const method = isPrivate ? 'post' : 'put';
+      const key = isPrivate ? 'friendId' : 'groupId';
+
+      const notifyExpireTs = chat.notifyExpireTs ? 0 : 876000 * 1000 * 60 * 60; // 100年（大致）
+      const data = {
+        [key]: chat.targetId,
+        notifyExpireTs
+      };
+      this.$http({ url, method, data }).then(() => {
+        this.chatStore.addNotify(chat.targetId, notifyExpireTs);
+        this.updateNotifyExpireTs = notifyExpireTs;
+        console.log(this.updateNotifyExpireTs);
+
+        this.$message.success("设置成功");
+      });
     },
     unpinFromTop (chat) {
       const idx = this.chatStore.findChatIdx(chat)
@@ -172,21 +270,120 @@ export default {
           })
       }
     },
+    // 查看用户信息
     showFriendInfo (item) {
       this.chatStore.chats.forEach((chat, index) => {
         if (item.targetId == chat.targetId) {
           this.isShow = index
         }
       })
-      this.chatStore.setActiveChat(item.targetId);
+      this.chatStore.setActiveChat(item.targetId, item.type);
       this.showUserInfo = true
     },
     // 设置未读表示
     setUnread (item) {
       this.chatStore.setUnreadCount(item.targetId);
+    },
+    // 投诉
+    complaint (item) {
+      console.log(item);
+      this.chatStore.chats.forEach((chat, index) => {
+        if (item.targetId == chat.targetId) {
+          this.isShow = index
+        }
+      })
+      this.chatStore.setActiveChat(item.targetId, item.type);
+      this.showComplaint = true
+    },
+    // 删除联系人
+    delLinkman (item) {
+      this.$confirm(`确认删除'${item.showName}',并清空聊天记录吗?`, '确认解除?', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$http({
+          url: `/friend/delete/${item.targetId}`,
+          method: 'delete'
+        }).then(() => {
+          this.onCloseModal()
+          this.$message.success("删除好友成功");
+          this.chatStore.removeChat(this.itemIndex);
+          this.friendStore.removeFriend(item.targetId);
+          this.chatStore.removePrivateChat(item.targetId);
+        })
+      })
+    },
+    editLinkman (item) {
+      this.chatStore.chats.forEach((chat, index) => {
+        if (item.targetId == chat.targetId) {
+          this.isShow = index
+        }
+      })
+      this.chatStore.setActiveChat(item.targetId, item.type);
+      this.editRemarkModal = true
+    },
+    // Group set 
+    manageGroup (info, member) {
+      this.groupInfo = info
+      this.groupMembers = member
+      this.dialogModalWidth = '350px'
+      this.dialogModal = true;
+      this.dialogType = 'groupManagement';
+    },
+    // 更新群数据
+    updateGroupData () {
+      this.dialogType = ''
+      this.dialogModal = false
+      this.$refs.ChatBoxRef.loadGroup(this.groupInfo.id)
+    },
+    updateGroupInfo (info) {
+      this.groupInfo = info
+      this.groupStore.updateGroup(info)
+    },
+    updateGroupMembers (member) {
+      this.groupMembers = member
+    },
+    // 新增成员
+    addMember (info, member) {
+      this.groupInfo = info
+      this.groupMembers = member
+      this.$refs.addGroupMember.open();
+    },
+    // 删除并退出或解散群组
+    deleteGroup (info, member) {
+      this.groupInfo = info
+      this.groupMembers = member
+      const isOwner = info.ownerId == this.mine.id
+      if (isOwner) {
+        this.$http({
+          url: `/group/delete/${info.id}`,
+          method: 'delete'
+        }).then(() => {
+          this.updateGroupData()
+          this.$message.success(`群聊'${info.name}'已解散`);
+          this.groupStore.removeGroup(info.id);
+          this.groupInfo = {}
+          this.groupMembers = []
+        })
+      } else {
+        this.$http({
+          url: `/group/quit/${info.id}`,
+          method: 'delete'
+        }).then(() => {
+          this.chatStore.removeGroupChat(info.id);
+          this.groupStore.removeGroup(info.id);
+        });
+      }
     }
   },
   computed: {
+    mine () {
+      return this.userStore.userInfo;
+    },
+    chatLoading () {
+      return this.chatStore.chatLoading;
+    },
     activeChat () {
       return this.chatStore.activeChat;
     },
@@ -234,6 +431,9 @@ export default {
           .el-icon-plus {
             color: #ccc;
           }
+        }
+        ::v-deep .el-popover {
+          width: 80px !important;
         }
       }
       .chat-list-loading {

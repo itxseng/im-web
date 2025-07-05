@@ -169,7 +169,7 @@ export default {
           border-bottom: none;
         }
         li:hover {
-          background-color: #e2e9fc;
+          background-color: #658efe;
         }
       }
     }

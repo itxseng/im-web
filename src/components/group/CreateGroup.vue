@@ -116,7 +116,7 @@ export default {
       .left {
         width: 100px;
         height: 100px;
-        background-color: #e2e9fc;
+        background-color: #658efe;
         border-radius: 50px;
         display: flex;
         align-items: center;
@@ -153,6 +153,7 @@ export default {
   }
   ::v-deep .el-input__inner {
     border: none !important;
-    border-bottom: 3px solid #e2e9fc !important;
+    border-bottom: 3px solid #658efe !important;
+    border-radius: 0px;
   }
 </style>

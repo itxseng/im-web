@@ -202,7 +202,7 @@ export default {
                 window.electronStore.setItem("userNameList", JSON.stringify(this.userNameList));
                 this.$message.success("登录成功");
                 this.$router.push("/home/chat");
-                window.electronAPI.resize(1000, 650);
+                window.electronAPI.resize(1075, 650);
               })
           } else {
             agreement.classList.add('apply-shake')

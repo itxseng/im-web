@@ -3,7 +3,7 @@
     <div class="star icon"
          v-if="chat.star"></div>
     <div class="info icon"
-         v-if="chat.notifyExpireTs"></div>
+         v-if="closeNotifyExpireTs"></div>
     <div class="top icon"
          v-if="chat.top"></div>
   </div>
@@ -12,7 +12,8 @@
 export default {
   data () {
     return {
-
+      currentTime: new Date().getTime(),
+      closeNotifyExpireTs: false
     }
   },
   props: {
@@ -21,6 +22,21 @@ export default {
       default () {
         return {}
       }
+    }
+  },
+  watch: {
+    chat: {
+      handler (val) {
+        const ts = val?.notifyExpireTs;
+        const now = Date.now();
+
+        // 判断是否是有效的正数时间戳
+        if (typeof ts === 'number' && ts > 0) {
+          this.closeNotifyExpireTs = ts > now;
+        } else {
+          this.closeNotifyExpireTs = false;
+        }
+      }, immediate: true,deep: true
     }
   }
 }

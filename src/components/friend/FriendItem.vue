@@ -1,5 +1,5 @@
 <template>
-  <div :class="active ? 'active' : ''">
+  <div :class="[active ? 'active' : '','friend']">
     <div class="friend-item"
          @contextmenu.prevent="showRightMenu($event)">
       <div class="friend-avatar">
@@ -91,7 +91,11 @@ export default {
 </script>
 
 <style scope lang="scss">
+  .friend {
+    width: 100%;
+  }
   .friend-item {
+    // width: 100%;
     height: 50px;
     display: flex;
     position: relative;
@@ -115,16 +119,19 @@ export default {
     }
 
     .friend-info {
-      flex: 1;
+      // flex: 1;
+      width: calc(100% - 72px);
       display: flex;
       flex-direction: column;
       padding-left: 10px;
       text-align: left;
 
       .friend-name {
+        width: 100%;
         font-size: var(--im-font-size);
         white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .friend-online {

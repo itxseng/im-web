@@ -3,7 +3,7 @@
     <div class="title">
       <i class="el-icon-arrow-left"
          style="cursor: pointer;"
-         @click="returnFriendInfo"></i>
+         @click="returnInfo"></i>
       <p>图片</p>
     </div>
     <div class="content">
@@ -40,11 +40,19 @@ export default {
       default: function () {
         return {}
       }
+    },
+    currentEntrance: {
+      type: String,
+      default: ''
     }
   },
   methods: {
-    returnFriendInfo () {
-      this.$emit('returnFriendInfo')
+    returnInfo () {
+      if (this.currentEntrance === '群成员信息') {
+        this.$emit('returnInfo','群成员信息')
+      } else {
+        this.$emit('returnInfo')
+      }
     },
     transitionJson (content) {
       return JSON.parse(content).originUrl
@@ -64,6 +72,14 @@ export default {
     }
     //转换JSON字符串
   },
+  watch: { 
+    chat: {
+      handler (val) {
+        console.log(val);
+        
+      }
+    },deep: true
+  }  
 }
 </script>
 <style lang="scss" scoped>

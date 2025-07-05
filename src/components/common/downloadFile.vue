@@ -1,13 +1,13 @@
 <template>
   <div class="download-file"
-       v-if="chat && msgInfo">
+       :style="{backgroundColor:bg,width: iconWidth,height:iconWidth}">
     <!-- 未下载：显示下载图标 -->
     <i class="el-icon-bottom"
        @click="downloadFile"
-       v-if="!progressVisible && !this.isMegInfo.isDownload"></i>
+       v-if="!progressVisible && !isDownloaded"></i>
     <!-- 已下载：点击打开文件夹 -->
     <div class="file-icon"
-         v-else-if="!progressVisible && this.isMegInfo.isDownload"
+         v-else-if="!progressVisible && isDownloaded"
          @click="openFile">
       <span class="el-icon-document"></span>
     </div>
@@ -17,7 +17,7 @@
       <el-progress type="circle"
                    :percentage="progress"
                    :status="progressStatus"
-                   :width="45"></el-progress>
+                   :width="iconWidth? iconWidth : 45"></el-progress>
     </div>
   </div>
 </template>
@@ -26,7 +26,16 @@
 export default {
   props: {
     msgInfo: { type: Object, default: () => ({}) },
-    chat: { type: Object, default: () => ({}) }
+    chat: { type: Object, default: () => ({}) },
+    bg: {
+      type: String,
+      default: ''
+    },
+    iconWidth: {
+      type: String,
+      default: ''
+    },
+
   },
   data () {
     return {
@@ -35,13 +44,21 @@ export default {
       progressStatus: 'success',
       removeProgress: null,
       removeDone: null,
-      removeError: null
+      removeError: null,
+      msg: {}
     };
   },
   computed: {
     contentData () { return JSON.parse(this.msgInfo.content) },
     isChat () { return this.chat },
-    isMegInfo () { return this.msgInfo }
+    // isMegInfo () { return this.msgInfo },
+    isMegInfo: {
+      get () { return this.msgInfo },
+      set (val) { this.msgInfo = val }
+    },
+    isDownloaded () {
+      return this.msgInfo && this.msgInfo.isDownload;
+    }
   },
   mounted () {
     this.checkLocalFile();
@@ -84,7 +101,6 @@ export default {
     },
     checkLocalFile () {
       const { localPath } = this.contentData || {};
-      console.log('this.contentData',this.contentData);
       this.$forceUpdate()
       if (!this.isMegInfo.isDownload) return;
       if (!localPath || !window.electronAPI.checkPathExists(localPath)) {
@@ -127,6 +143,19 @@ export default {
           window.electronAPI.showInFolderByName(filename);
         }
       }
+    }
+  },
+  watch: {
+    msgInfo: {
+      handler (val) {
+        console.log('chat-item msgInfo', val);
+        if (val && typeof val.isDownload === 'undefined') {
+          this.$set(val, 'isDownload', false);
+        }
+        this.msg = val;
+      },
+      deep: true,
+      immediate: true
     }
   }
 };
