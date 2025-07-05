@@ -48,6 +48,9 @@
       <el-main style="padding: 0;">
         <el-container>
           <el-container class="content-box">
+            <ChatTopAnnouncement v-if="isGroup && group.notice.trim() !== ''"
+                                 @openAnnouncement="openAnnouncement"
+                                 style="height: 50px !important;margin-bottom: 5px;line-height: 50px;" />
             <div v-if="isGroup && group.topMessages && group.topMessages.length > 0"
                  class="chat-top-message">
               <chat-top-message :group="group"
@@ -311,6 +314,8 @@
     </el-dialog>
     <right-menu ref="rightMenu"
                 @select="onSelectMenu"></right-menu>
+    <GroupAnnouncementModal ref="groupAnnouncementModal"
+                            :title="'群公告'" @groupAnnouncementClose="groupAnnouncementClose"/>
   </div>
 </template>
 
@@ -326,6 +331,7 @@ import GroupMemberSelector from "../group/GroupMemberSelector.vue"
 import ChatSelector from "./ChatSelector.vue";
 import RtcGroupJoin from "../rtc/RtcGroupJoin.vue"
 import ChatInput from "./ChatInput.vue";
+import ChatTopAnnouncement from "./ChatTopAnnouncement.vue";
 import ChatQuoteMessage from "./ChatQuoteMessage.vue";
 import ChatTopMessage from "./ChatTopMessage.vue";
 import FriendInfo from '../friend/FriendInfo.vue'
@@ -339,6 +345,7 @@ import GroupInfoModal from "../group/GroupInfoModal.vue";
 import GroupMemberModal from "../group/GroupMemberModal.vue";
 import GroupMemberInfoModal from "../group/GroupMemberInfoModal.vue";
 import Qrcode from '../common/Qrcode.vue'
+import GroupAnnouncementModal from "../group/GroupAnnouncementModal.vue";
 export default {
   name: "chatPrivate",
   components: {
@@ -365,7 +372,9 @@ export default {
     GroupInfoModal,
     GroupMemberModal,
     GroupMemberInfoModal,
-    Qrcode
+    Qrcode,
+    ChatTopAnnouncement,
+    GroupAnnouncementModal
   },
   props: {
     chat: {
@@ -473,6 +482,17 @@ export default {
     }
   },
   methods: {
+    groupAnnouncementClose(){
+      console.log('关闭');
+      
+    },
+    // 打开群公告modal
+    openAnnouncement () {
+      console.log(55555);
+      this.$nextTick(() => {
+        this.$refs.groupAnnouncementModal.open()
+      })
+    },
     // 打开二维码
     openCode (id, type) {
       this.dialogType = '二维码'
@@ -2054,5 +2074,8 @@ export default {
     width: 100%;
     display: flex;
     justify-content: flex-end;
+  }
+  .content-box {
+    width: 100%;
   }
 </style>

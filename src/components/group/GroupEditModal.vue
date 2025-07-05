@@ -25,9 +25,15 @@
                     placeholder="请输入群组名称"></el-input>
         </div>
       </div>
+      <!-- <div class="centent-inform">
+        <span>群组简介</span>
+        <el-input v-model="groupFrom.notice"
+                  placeholder="请输入群公告"></el-input>
+      </div> -->
       <div class="centent-inform">
         <span>群组公告</span>
-        <el-input v-model="groupFrom.notice"
+        <el-input type="textarea"
+                  v-model="groupFrom.notice"
                   placeholder="请输入群公告"></el-input>
       </div>
       <div class="centent-set">
@@ -79,7 +85,7 @@ export default {
     return {
       maxSize: 5 * 1024 * 1024,
       groupFrom: {
-        id:null,
+        id: null,
         name: '',
         headImage: '',
         headImageThumb: '',
@@ -217,12 +223,15 @@ export default {
       }
       .centent-inform {
         width: 100%;
-        height: 70px;
+        // height: 70px;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
         margin-top: 20px;
+        span {
+          margin-bottom: 5px;
+        }
       }
       .centent-set {
         width: 100%;

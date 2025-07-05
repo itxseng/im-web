@@ -12,7 +12,7 @@
     <div class="message-box"
          ref="scrollWrapper"
          @scroll="onScroll"
-         @click.stop="scrollToNext()">
+         @click="scrollToNext()">
       <div class="message"
            v-for="(item, index) in groupMassages"
            :key="index"
@@ -21,6 +21,8 @@
         <div class="content"
              v-html="content(item)">
         </div>
+        <i class="el-icon-aim"
+           @click.stop="onLoate(item)"></i>
         <div class="close"
              title="移除"
              @click.stop="onClose(item)"
@@ -114,8 +116,12 @@ export default {
       }
       return content;
     },
+    onLoate (item) {
+
+      this.$emit("locate", item);
+    },
     scrollToNext () {
-      // this.$emit("locate", this.msgInfo);
+      // this.$emit("locate", item);
       this.$nextTick(() => {
         const messages = this.$refs.messages;
         const wrapper = this.$refs.scrollWrapper;
@@ -178,9 +184,10 @@ export default {
 
 <style scoped lang="scss">
   .chat-top-message {
-    width: 100%;
+    width: calc(100% - 10px);
     height: 50px; // 可自定义高度
     background: #dcebfd;
+    margin: 5px;
     border-radius: 8px;
     box-sizing: border-box;
     cursor: pointer;
