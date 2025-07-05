@@ -66,3 +66,10 @@ contextBridge.exposeInMainWorld('electronStore', {
   setItem: (key, value) => ipcRenderer.sendSync('store-set', { key, value }),
   removeItem: (key) => ipcRenderer.sendSync('store-remove', key)
 });
+
+// SQLite 持久化接口
+contextBridge.exposeInMainWorld('electronDB', {
+  getItem: (key) => ipcRenderer.invoke('db-get', key),
+  setItem: (key, value) => ipcRenderer.invoke('db-set', { key, value }),
+  removeItem: (key) => ipcRenderer.invoke('db-remove', key)
+});

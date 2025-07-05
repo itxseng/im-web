@@ -10,6 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 import fs from 'fs'
 import os from 'os'
+import sqlite3 from 'sqlite3'
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -23,6 +24,16 @@ let mainWindow  // 用于发送进度
 let menuWindow  // 用于右键浮动菜单
 let tray
 let isQuitting = false
+
+// —— SQLite 数据库 —— //
+let db
+const dbFile = path.join(app.getPath('userData'), 'messages.sqlite')
+function initDatabase () {
+  db = new sqlite3.Database(dbFile)
+  db.serialize(() => {
+    db.run('CREATE TABLE IF NOT EXISTS storage (key TEXT PRIMARY KEY, value TEXT)')
+  })
+}
 
 // —— 持久化存储 —— //
 const storeFile = path.join(app.getPath('userData'), 'store.json');
@@ -52,6 +63,31 @@ ipcMain.on('store-remove', (event, key) => {
   saveStore();
   event.returnValue = true;
 });
+
+// —— SQLite 持久化接口 —— //
+ipcMain.handle('db-get', (event, key) => {
+  return new Promise(resolve => {
+    db.get('SELECT value FROM storage WHERE key=?', [key], (err, row) => {
+      if (err) return resolve(null)
+      resolve(row ? JSON.parse(row.value) : null)
+    })
+  })
+})
+ipcMain.handle('db-set', (event, { key, value }) => {
+  return new Promise(resolve => {
+    const val = JSON.stringify(value)
+    db.run(
+      'INSERT INTO storage(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+      [key, val],
+      err => resolve(!err)
+    )
+  })
+})
+ipcMain.handle('db-remove', (event, key) => {
+  return new Promise(resolve => {
+    db.run('DELETE FROM storage WHERE key=?', [key], err => resolve(!err))
+  })
+})
 
 function createTray() {
   if (tray) return
@@ -316,6 +352,7 @@ app.on('ready', async () => {
     try { await installExtension(VUEJS_DEVTOOLS) }
     catch (e) { console.error('DevTools 安装失败:', e) }
   }
+  initDatabase()
   createWindow()
 })
 

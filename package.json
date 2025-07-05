@@ -27,7 +27,8 @@
     "vue": "2.7.16",
     "vue-axios": "3.5.2",
     "vue-router": "3.6.5",
-    "vue-video-player": "^5.0.2"
+    "vue-video-player": "^5.0.2",
+    "sqlite3": "5.1.6"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.12",
