@@ -48,8 +48,9 @@
       <el-main style="padding: 0;">
         <el-container>
           <el-container class="content-box">
-            <ChatTopAnnouncement v-if="isGroup && group.notice.trim() !== ''"
+            <ChatTopAnnouncement v-if="isGroup && group.notice.trim() !== '' && showAnnouncement"
                                  @openAnnouncement="openAnnouncement"
+                                 @announcementClose="announcementClose"
                                  style="height: 50px !important;margin-bottom: 5px;line-height: 50px;" />
             <div v-if="isGroup && group.topMessages && group.topMessages.length > 0"
                  class="chat-top-message">
@@ -315,7 +316,9 @@
     <right-menu ref="rightMenu"
                 @select="onSelectMenu"></right-menu>
     <GroupAnnouncementModal ref="groupAnnouncementModal"
-                            :title="'群公告'" @groupAnnouncementClose="groupAnnouncementClose"/>
+                            :title="'群公告'"
+                            @groupAnnouncementClose="groupAnnouncementClose"
+                            @updateInfo="updateInfo" />
   </div>
 </template>
 
@@ -478,17 +481,21 @@ export default {
       groupInfoModalShow: false,
       currentEntrance: '',
       memberInfo: {},
-      backModal: ''
+      backModal: '',
+      showAnnouncement: true
     }
   },
   methods: {
-    groupAnnouncementClose(){
+    announcementClose () {
+      this.showAnnouncement = false
+    },
+    groupAnnouncementClose () {
       console.log('关闭');
-      
     },
     // 打开群公告modal
     openAnnouncement () {
-      console.log(55555);
+      console.log('666');
+
       this.$nextTick(() => {
         this.$refs.groupAnnouncementModal.open()
       })
@@ -830,10 +837,6 @@ export default {
             icon: 'el-icon-delete'
           },
           {
-            key: 'MANAGEGROUP',
-            name: '管理群组',
-          },
-          {
             key: 'ADDMEMBER',
             name: '添加成员'
           },
@@ -865,6 +868,12 @@ export default {
               item.icon = 'el-icon-remove-outline'
             }
           })
+        }
+        if (this.groupInfo.ownerId == this.mine.id || this.isManager) {
+          groupMenuList.splice(1, 0, {
+            key: 'MANAGEGROUP',
+            name: '管理群组',
+          });
         }
         if (this.chat.notifyExpireTs) {
           groupMenuList.forEach(item => {
@@ -1647,10 +1656,12 @@ export default {
       return this.friendStore.friendInfo
     },
     groupMemberChat () {
-      console.log(this.chatStore.groupMemberChat);
-
       return this.chatStore.groupMemberChat
-    }
+    },
+    isManager () {
+      let m = this.groupMembers.find((m) => m.userId == this.mine.id);
+      return m && m.isManager;
+    },
   },
   watch: {
     updateNotifyExpireTs: {

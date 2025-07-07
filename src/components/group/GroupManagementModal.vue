@@ -9,8 +9,7 @@
           <span class="icon group-edit-icon"></span>
           <span>编辑群组</span>
         </li>
-        <li @click="openModal()"
-            v-if="isOwner">
+        <li @click="openModal('astrict')">
           <span class="icon group-astrict-icon"></span>
           <span>限制</span>
         </li>
@@ -53,6 +52,8 @@
                             :title="'转让群主'"
                             @updateGroupData="updateGroupData"
                             @close="onClose" />
+    <GroupAstrict ref="groupAstrictRef"
+                  :title="'限制'" />
   </div>
 </template>
 <script>
@@ -62,6 +63,7 @@ export default {
     GroupEditModal: () => import('@/components/group/GroupEditModal.vue'),
     GroupAdmin: () => import('@/components/group/GroupAdmin.vue'),
     AddGroupPersonnelModal: () => import('@/components/group/AddGroupPersonnelModal.vue'),
+    GroupAstrict: () => import('@/components/group/GroupAstrict.vue')
   },
   props: {
     groupInfo: {
@@ -84,11 +86,17 @@ export default {
       this.$emit('close');
     },
     openModal (type) {
-      if (type === 'makeOver') {
-        this.$refs.addGroupPersonnelRef.open()
-      } else {
-        this.dialogModalType = type;
-        this.dialogModal = true;
+      switch (type) {
+        case 'makeOver':
+          this.$refs.addGroupPersonnelRef.open()
+          break;
+        case 'astrict':
+          this.$refs.groupAstrictRef.open()
+          break;
+        default:
+          this.dialogModalType = type;
+          this.dialogModal = true;
+          break;
       }
     },
     updateGroupData () {

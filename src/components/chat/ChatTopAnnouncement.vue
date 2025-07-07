@@ -5,6 +5,11 @@
     <div class="content">
       <p>{{ groupAnnouncement }}</p>
     </div>
+    <div class="close"
+         title="移除"
+         @click.stop="onClose">
+      <i class="el-icon-close"></i>
+    </div>
   </div>
 </template>
 <script>
@@ -17,6 +22,9 @@ export default {
   methods: {
     openAnnouncement () {
       this.$emit('openAnnouncement')
+    },
+    onClose () {
+      this.$emit('announcementClose')
     }
   },
   computed: {
@@ -47,8 +55,9 @@ export default {
       color: #f8ba33;
     }
     .content {
-      width: calc(100% - 30px);
+      width: calc(100% - 61px);
       height: 50px;
+      padding: 0 10px;
       p {
         width: 100%;
         padding: 0;

@@ -176,6 +176,8 @@ export default {
 
     },
     onAtSelect (member) {
+      console.log(member);
+      
       this.atIng = false;
       // 选中输入的 @xx 符
       let blurRange = this.blurRange;

@@ -5,7 +5,8 @@
              :show-close="false"
              :append-to-body="true"
              :destroy-on-close="true">
-    <div class="group-add">
+    <div class="group-add"
+         v-if="title">
       <div class="title">
         <p>{{ title }}</p>
       </div>
@@ -77,13 +78,19 @@
                                        @close="onClose"
                                        @updateGroupData="updateGroupData"
                                        v-if="title === '添加管理员'" />
+      <GroupMemberAstrict ref="memberAstrictRef"
+                          :title="'用户限制'"
+                          @groupMemberAstrictClose="groupMemberAstrictClose"
+                          @updateGroupData="updateGroupData"
+                          v-if="title === '限制用户权限'" />
     </div>
   </el-dialog>
 </template>
 <script>
 export default {
   components: {
-    GroupManagementPermissionsModal: () => import('./GroupManagementPermissionsModal.vue')
+    GroupManagementPermissionsModal: () => import('./GroupManagementPermissionsModal.vue'),
+    GroupMemberAstrict: () => import('./GroupMemberAstrict.vue')
   },
   props: {
     title: {
@@ -99,16 +106,19 @@ export default {
     }
   },
   methods: {
-
     showPermissions (item) {
       if (this.title === '添加管理员') {
         this.$refs.permissionsModalRef.open(item);
+      } else if (this.title === '限制用户权限') {
+        this.$refs.memberAstrictRef.open(item);
       } else {
         this.radio = item.userId
       }
     },
     open () {
       this.dialogModal = true;
+      console.log('打开了', this.filteredMembers);
+
     },
     // 取消按钮
     onClose () {
@@ -141,13 +151,16 @@ export default {
       return item.online ? '在线' : this.$date.toTimeText(item.lastOnlineTime, true, true);
     },
     currentGroupMemberType (item) {
-      if (this.title === '添加管理员') {
+      if (this.title === '添加管理员' || this.title === '限制用户权限') {
         return item.userId != this.currentGroupInfo.ownerId && !item.isManager
       } else if (this.title === '转让群主') {
         return item.userId != this.currentGroupInfo.ownerId
       }
       // return this.groupStore.currentGroupMemberInfo;
     },
+    groupMemberAstrictClose(){
+      console.log('关闭');
+    }
   },
   computed: {
     currentGroupMember () {

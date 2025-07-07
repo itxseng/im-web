@@ -77,7 +77,11 @@ export default {
       overflow-y: auto;
       align-items: center;
       justify-content: center;
-      background-color: #3031336e;
+      background: linear-gradient(
+        270deg,
+        #ffffff 0%,
+        rgba(224, 232, 251, 0.5) 100%
+      );
       border-radius: 7px;
       .content-box {
         width: 250px;

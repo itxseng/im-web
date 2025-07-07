@@ -54,7 +54,7 @@
         <div :class="['friend-list-nav-notice',showGroupNotice ? 'friend-list-nav-notice-click':'']"
              @click="friendNavClick(3)">
           <div class="icon"></div>
-          <span>群公告</span>
+          <span>群通知</span>
         </div>
       </div>
       <el-scrollbar class="friend-list-items">

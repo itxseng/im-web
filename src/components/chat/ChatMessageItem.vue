@@ -19,7 +19,7 @@
          :class="[{ 'message-mine': mine },selected ? 'mr' : '', isGroup ? '' : 'left-set']">
       <div class="avatar"
            v-if="isGroup"
-           @click="openMamberInfo(msgInfo)">
+           @click="openMamberInfo(msgInfo)" @contextmenu.prevent="showHeadMessageMenu($event)">
         <head-image :size="38"
                     :url="headImage"></head-image>
       </div>
@@ -275,6 +275,19 @@ export default {
       this.audio.play();
       this.onPlayVoice = 'RUNNING';
     },
+    showHeadMessageMenu(e){
+      let menuItems = [
+        {
+          key: 'MUTE',
+          name: '禁言'
+        },
+        {
+          key:'AT',
+          name: '@一下'
+        }
+      ]
+      this.$refs.rightMenu.open(e, menuItems);
+    },
     showMessageMenu (e) {
       console.log("showMessageMenu", this.msgInfo);
 
@@ -425,8 +438,11 @@ export default {
       return m && m.isManager;
     },
     htmlText () {
-      let color = this.msgInfo.selfSend ? 'white' : '';
-      let text = this.$url.replaceURLWithHTMLLinks(this.msgInfo.content, color)
+      let text;
+      if (this.msgInfo.content && this.msgInfo.content !== '') {
+        let color = this.msgInfo.selfSend ? 'white' : '';
+        text = this.$url.replaceURLWithHTMLLinks(this.msgInfo.content, color)
+      }
       return this.$emo.transform(text, 'emoji-normal')
     },
     isFriend () {
