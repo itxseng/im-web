@@ -66,6 +66,10 @@ export default {
                 });
             }
             menuItems.push({
+                key: 'AT',
+                name: '@一下',
+            });
+            menuItems.push({
                 key: 'USER_INFO',
                 name: '查看资料',
             });
@@ -121,6 +125,9 @@ export default {
                     break;
                 case "APPLY_FRIEND":
                     this.applyFriend();
+                    break;
+                case "AT":
+                    this.atMember();
                     break;
                 case "UN_MUTE":
                     this.setMute(false);
@@ -224,6 +231,9 @@ export default {
                 this.member.isManager = false;
                 this.$message.success(`您移除了'${this.member.showNickName}'的管理员身份`)
             })
+        },
+        atMember() {
+            this.$eventBus.$emit('atMember', this.member)
         },
         showUserInfo() {
             this.$http({

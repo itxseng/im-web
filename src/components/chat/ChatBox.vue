@@ -89,10 +89,11 @@
                                      @select="onSelectMessage"
                                      @quote="onQuoteMessage"
                                      @edit="onEditMessage"
-                                     @top="onTopMessage"
-                                     @selectMessage="selectMessage"
-                                     @copy="copyMessage"
-                                     @transmit="transmitMessage"
+                                    @top="onTopMessage"
+                                    @at="onAtMessage"
+                                    @selectMessage="selectMessage"
+                                    @copy="copyMessage"
+                                    @transmit="transmitMessage"
                                      @complaint="complaintOpen()"
                                      @cleared="cleared"
                                      :selected="isSelected">
@@ -1379,6 +1380,15 @@ export default {
         method: 'post'
       }).then(() => { })
     },
+    onAtMessage (msgInfo) {
+      if (!this.isGroup) {
+        return
+      }
+      const member = this.groupMembers.find(m => m.userId == msgInfo.sendId)
+      if (member) {
+        this.$refs.chatInputEditor.insertAtMember(member)
+      }
+    },
     onLocateQuoteMessage (msgInfo) {
       this.locateMessage(msgInfo.quoteMessage);
     },
@@ -1534,6 +1544,12 @@ export default {
           return msgInfo.selfSend ? this.mine.headImageThumb : this.chat.headImage
         }
       }
+    },
+    onAtMember (member) {
+      if (!this.isGroup) {
+        return
+      }
+      this.$refs.chatInputEditor.insertAtMember(member)
     },
     resetEditor () {
       this.$nextTick(() => {
@@ -1758,6 +1774,14 @@ export default {
   mounted () {
     let div = document.getElementById("chatScrollBox");
     div.addEventListener('scroll', this.onScroll)
+    this.$eventBus.$on('atMember', this.onAtMember)
+  },
+  beforeDestroy () {
+    let div = document.getElementById("chatScrollBox");
+    if (div) {
+      div.removeEventListener('scroll', this.onScroll)
+    }
+    this.$eventBus.$off('atMember', this.onAtMember)
   }
 }
 </script>
