@@ -99,7 +99,8 @@ export default {
     return {
       lastPlayAudioTime: new Date().getTime() - 1000,
       isFullscreen: true,
-      reconnecting: false
+      reconnecting: false,
+      groupInfo: null
     }
   },
   methods: {
@@ -132,7 +133,7 @@ export default {
             this.onReconnectWs();
           } else {
             // 加载离线消息
-            console.log("加载离线消息",this.chatStore.privateMsgMaxId);
+            console.log("加载离线消息", this.chatStore.privateMsgMaxId);
             // 获取未读消息
             this.pullPrivateOfflineMessage(this.chatStore.privateMsgMaxId);
             this.pullGroupOfflineMessage(this.chatStore.groupMsgMaxId);
@@ -155,8 +156,8 @@ export default {
             this.handlePrivateMessage(msgInfo);
           } else if (cmd == 4) {
             // 插入群聊消息
-            console.log('// 插入群聊消息',msgInfo);
-            
+            console.log('// 插入群聊消息', msgInfo);
+
             this.handleGroupMessage(msgInfo);
           } else if (cmd == 5) {
             // 处理系统消息
@@ -210,23 +211,23 @@ export default {
     },
     onReconnectWs () {
       console.log(6666);
-      
+
       // 重连成功
-			this.reconnecting = false;
-			// 重新加载群和好友
-			const promises = [];
-			promises.push(this.friendStore.loadFriend());
-			promises.push(this.groupStore.loadGroup());
-			Promise.all(promises).then(() => {
-				// 加载离线消息
-				this.pullPrivateOfflineMessage(this.chatStore.privateMsgMaxId);
-				this.pullGroupOfflineMessage(this.chatStore.groupMsgMaxId);
-				this.pullSystemOfflineMessage(this.chatStore.systemMsgMaxSeqNo);
-				this.$message.success("重新连接成功");
-			}).catch(() => {
-				this.$message.error("初始化失败");
-				this.onExit();
-			})
+      this.reconnecting = false;
+      // 重新加载群和好友
+      const promises = [];
+      promises.push(this.friendStore.loadFriend());
+      promises.push(this.groupStore.loadGroup());
+      Promise.all(promises).then(() => {
+        // 加载离线消息
+        this.pullPrivateOfflineMessage(this.chatStore.privateMsgMaxId);
+        this.pullGroupOfflineMessage(this.chatStore.groupMsgMaxId);
+        this.pullSystemOfflineMessage(this.chatStore.systemMsgMaxSeqNo);
+        this.$message.success("重新连接成功");
+      }).catch(() => {
+        this.$message.error("初始化失败");
+        this.onExit();
+      })
     },
     pullPrivateOfflineMessage (minId) {
       this.chatStore.setLoadingPrivateMsg(true)
@@ -235,20 +236,20 @@ export default {
         method: 'GET'
       }).catch(() => {
         console.log("加载私聊消息失败");
-        
+
         this.chatStore.setLoadingPrivateMsg(false)
       })
     },
     pullGroupOfflineMessage (minId) {
-      console.log("加载群聊消息",minId);
-      
+      console.log("加载群聊消息", minId);
+
       this.chatStore.setLoadingGroupMsg(true)
       this.$http({
         url: "/message/group/pullOfflineMessage?minId=" + minId,
         method: 'GET'
       }).catch(() => {
         console.log("加载群聊消息失败");
-        
+
         this.chatStore.setLoadingGroupMsg(false)
       })
     },
@@ -294,7 +295,7 @@ export default {
         return;
       }
       // 远端删除
-      if (msg.type == this.$enums.MESSAGE_TYPE.DELETE) { 
+      if (msg.type == this.$enums.MESSAGE_TYPE.DELETE) {
         this.chatStore.remoteDeletionMessage(msg, chatInfo)
         return;
       }
@@ -347,7 +348,7 @@ export default {
     },
     insertPrivateMessage (friend, msg) {
       console.log("insertPrivateMessage", friend, msg);
-      
+
       let chatInfo = {
         type: 'PRIVATE',
         targetId: friend.id,
@@ -365,6 +366,16 @@ export default {
       }
 
     },
+    // 进群通知处理
+    handleGroupNotify (msg) {
+      this.$http({
+        url: `/group/join/requests/${msg.groupId}`,
+        method: 'GET'
+      }).then((res) => {
+        this.groupStore.setGroupsApplication(res)
+      })
+    },
+    // 群组消息处理
     handleGroupMessage (msg) {
       // 标记这条消息是不是自己发的
       msg.selfSend = msg.sendId == this.userStore.userInfo.id;
@@ -372,10 +383,18 @@ export default {
         type: 'GROUP',
         targetId: msg.groupId
       }
+      if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_INFORM) {
+        console.log('群组通知', msg);
+        this.handleGroupNotify(msg)
+      }
+      if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_BLACKLIST) {
+        console.log('黑名单通知', msg);
+      }
+      if (msg.type == this.$enums.MESSAGE_TYPE.TIP_TEXT && msg.groupId) {
+        this.loadGroup(msg.groupId)
+      }
       // 消息加载标志
       if (msg.type == this.$enums.MESSAGE_TYPE.LOADING) {
-        console.log(666666,JSON.parse(msg.content));
-        
         this.chatStore.setLoadingGroupMsg(JSON.parse(msg.content))
         return;
       }
@@ -417,14 +436,14 @@ export default {
       if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_TOP_MESSAGE) {
         let topMessage = msg.content ? JSON.parse(msg.content) : null;
         console.log("置顶消息:", topMessage)
-          this.groupStore.updateTopMessage(msg.groupId, topMessage);
+        this.groupStore.updateTopMessage(msg.groupId, topMessage);
         return;
       }
       // 群消息置顶移除
       if (msg.type == this.$enums.MESSAGE_TYPE.GROUP_REMOVE_TOP_MESSAGE) {
         let topMessage = msg.content ? JSON.parse(msg.content) : null;
         console.log("移除置顶消息:", topMessage)
-          this.groupStore.deleteTopMessage(msg.groupId, topMessage);
+        this.groupStore.deleteTopMessage(msg.groupId, topMessage);
         return;
       }
       // 群视频信令
@@ -508,6 +527,35 @@ export default {
       this.chatStore.openChat(chatInfo);
       // 插入消息
       this.chatStore.insertMessage(msg, chatInfo);
+    },
+    loadGroup (groupId) {
+      this.$http({
+        url: `/group/find/${groupId}`,
+        method: 'get'
+      }).then((group) => {
+        this.groupInfo = group
+        this.groupStore.setGroupInfo(group)
+        this.chatStore.updateChatFromGroup(group);
+        this.chatStore.addNotify(group.id, group.notifyExpireTs)
+        this.groupStore.updateGroup(group);
+      });
+      this.$http({
+        url: `/group/members/${groupId}`,
+        method: 'get'
+      }).then((groupMembers) => {
+        this.groupStore.setCurrentGroupMember(groupMembers);
+        this.groupMembers = groupMembers;
+        groupMembers.forEach((member) => {
+          // 群主权限
+          if (this.userStore.userInfo.id == this.groupInfo.ownerId && member.userId == this.userStore.userInfo.id) {
+            this.groupStore.setGroupPermission(member);
+          }
+          // 管理员权限
+          if (this.userStore.userInfo.id != this.groupInfo.ownerId && member.isManager) {
+            this.groupStore.setGroupPermission(member);
+          }
+        });
+      });
     },
     onExit () {
       this.$wsApi.close(3000);

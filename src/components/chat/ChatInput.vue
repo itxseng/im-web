@@ -257,10 +257,10 @@ export default {
       }
     },
     insertEmoji (emojiText) {
-      let emojiElement = document.createElement('img');
-      emojiElement.className = 'emoji-normal no-text';
-      emojiElement.dataset.emojiCode = emojiText;
-      emojiElement.src = this.$emo.textToUrl(emojiText);
+        let emojiElement = document.createElement('img');
+        emojiElement.className = 'emoji-normal no-text';
+        emojiElement.dataset.emojiCode = emojiText;
+        emojiElement.src = this.$emo.textToUrl(emojiText);
 
       let blurRange = this.blurRange;
       if (!blurRange) {
@@ -279,8 +279,28 @@ export default {
       blurRange.collapse()
 
       this.selectElement(textNode);
-      this.updateRange();
-      this.isEmpty = false;
+        this.updateRange();
+        this.isEmpty = false;
+    },
+    insertAtMember (member) {
+      let blurRange = this.blurRange
+      if (!blurRange) {
+        this.focus()
+        this.updateRange()
+        blurRange = this.blurRange
+      }
+      let element = document.createElement('SPAN')
+      element.className = 'chat-at-user'
+      element.dataset.id = member.userId
+      element.contentEditable = 'false'
+      element.innerText = `@${member.showNickName}`
+      blurRange.insertNode(element)
+      blurRange.collapse()
+      let textNode = document.createTextNode('\u00A0')
+      blurRange.insertNode(textNode)
+      blurRange.collapse()
+      this.selectElement(textNode, 1)
+      this.isEmpty = false
     },
     generateId () {
       return this.currentId++;

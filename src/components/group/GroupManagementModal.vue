@@ -17,7 +17,7 @@
           <span class="icon group-admin-icon"></span>
           <span>管理员</span>
         </li>
-        <li @click="openModal()">
+        <li @click="openModal('blacklist')">
           <span class="icon group-blacklist-icon"></span>
           <span>黑名单</span>
         </li>
@@ -49,11 +49,16 @@
                   @updateGroupData="updateGroupData" />
     </el-dialog>
     <AddGroupPersonnelModal ref="addGroupPersonnelRef"
-                            :title="'转让群主'"
+                            :title="title"
                             @updateGroupData="updateGroupData"
                             @close="onClose" />
     <GroupAstrict ref="groupAstrictRef"
-                  :title="'限制'" />
+                  :title="title"
+                  @updateGroupData="updateGroupData"
+                  @close="onClose" />
+    <GroupBlacklistModal ref="groupBlacklistRef"
+                         :title="title"
+                         @close="onClose" />
   </div>
 </template>
 <script>
@@ -63,7 +68,8 @@ export default {
     GroupEditModal: () => import('@/components/group/GroupEditModal.vue'),
     GroupAdmin: () => import('@/components/group/GroupAdmin.vue'),
     AddGroupPersonnelModal: () => import('@/components/group/AddGroupPersonnelModal.vue'),
-    GroupAstrict: () => import('@/components/group/GroupAstrict.vue')
+    GroupAstrict: () => import('@/components/group/GroupAstrict.vue'),
+    GroupBlacklistModal: () => import('@/components/group/GroupBlacklistModal.vue')
   },
   props: {
     groupInfo: {
@@ -78,7 +84,8 @@ export default {
   data () {
     return {
       dialogModal: false,
-      dialogModalType: ''
+      dialogModalType: '',
+      title: ''
     }
   },
   methods: {
@@ -88,10 +95,22 @@ export default {
     openModal (type) {
       switch (type) {
         case 'makeOver':
-          this.$refs.addGroupPersonnelRef.open()
+          this.title = '转让群主'
+          this.$nextTick(() => {
+            this.$refs.addGroupPersonnelRef.open()
+          })
           break;
         case 'astrict':
-          this.$refs.groupAstrictRef.open()
+          this.title = '限制'
+          this.$nextTick(() => {
+            this.$refs.groupAstrictRef.open()
+          })
+          break;
+        case 'blacklist':
+          this.title = '黑名单'
+          this.$nextTick(() => {
+            this.$refs.groupBlacklistRef.open()
+          })
           break;
         default:
           this.dialogModalType = type;

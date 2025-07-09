@@ -5,8 +5,7 @@
              :show-close="false"
              :append-to-body="true"
              :destroy-on-close="true">
-    <div class="group-add"
-         v-if="title">
+    <div class="group-add">
       <div class="title">
         <p>{{ title }}</p>
       </div>
@@ -38,6 +37,11 @@
                         @click.native.stop
                         v-if="title === '转让群主'">
               </el-radio>
+              <el-checkbox class="li-checkbox"
+                           :label="item.userId"
+                           v-model="checkbox"
+                           @click.native.stop
+                           v-if="title === '加入黑名单'" />
             </li>
           </template>
         </ul>
@@ -61,6 +65,10 @@
                         @click.native.stop
                         v-if="title === '转让群主'">
               </el-radio>
+              <el-checkbox class="li-checkbox"
+                           v-model="checkbox"
+                           @click.native.stop
+                           v-if="title === '加入黑名单'" />
             </li>
           </div>
           <div v-if="filteredMembers.length === 0"
@@ -96,50 +104,86 @@ export default {
     title: {
       type: String,
       default: ''
+    },
+    groupBlacklist: {
+      type: Array,
+      default: () => []
     }
   },
   data () {
     return {
       searchText: '',
       dialogModal: false,
-      radio: ''
+      radio: '',
+      checkbox: [],
     }
   },
   methods: {
-    showPermissions (item) {
-      if (this.title === '添加管理员') {
-        this.$refs.permissionsModalRef.open(item);
-      } else if (this.title === '限制用户权限') {
-        this.$refs.memberAstrictRef.open(item);
-      } else {
-        this.radio = item.userId
+    addBlackList () {
+      let data = {
+        groupId: this.currentGroupInfo.id,
+        userIds: this.checkbox,
+        reason: '违反群规则'
       }
+      this.$http({
+        url: `/group/blacklist/add`,
+        method: 'post',
+        data
+      }).then(() => {
+        this.$message.success(`已添加黑名单`)
+        this.updateGroupData()
+      })
+    },
+    showPermissions (item) {
+      const handlers = {
+        '添加管理员': () => this.$refs.permissionsModalRef.open(item),
+        '限制用户权限': () => this.$refs.memberAstrictRef.open(item),
+        '转让群主': () => {
+          this.radio = item.userId;
+        },
+        '加入黑名单': () => {
+          const userId = item.userId;
+          const index = this.checkbox.indexOf(userId);
+          if (index >= 0) {
+            this.checkbox.splice(index, 1);
+          } else {
+            this.checkbox.push(userId);
+          }
+          console.log(this.checkbox, item);
+        }
+      };
+
+      const handler = handlers[this.title];
+      if (handler) handler();
     },
     open () {
       this.dialogModal = true;
-      console.log('打开了', this.filteredMembers);
-
     },
     // 取消按钮
     onClose () {
       this.searchText = ''
       this.radio = ''
       this.dialogModal = false;
-      this.$emit('close');
+      // this.$emit('close');
     },
     onSave () {
-      let data = {
-        groupId: this.currentGroupInfo.id,
-        userId: this.radio
+      if (this.title === '转让群主') {
+        let data = {
+          groupId: this.currentGroupInfo.id,
+          userId: this.radio
+        }
+        this.$http({
+          url: '/group/transfer',
+          method: 'PUT',
+          data
+        }).then(() => {
+          this.$message.success('转让成功')
+          this.updateGroupData()
+        })
       }
-      this.$http({
-        url: '/group/transfer',
-        method: 'PUT',
-        data
-      }).then(() => {
-        this.$message.success('转让成功')
-        this.updateGroupData()
-      })
+      if (this.title === '加入黑名单') {
+        this.addBlackList()
+      }
     },
     updateGroupData () {
       this.searchText = ''
@@ -155,16 +199,36 @@ export default {
         return item.userId != this.currentGroupInfo.ownerId && !item.isManager
       } else if (this.title === '转让群主') {
         return item.userId != this.currentGroupInfo.ownerId
+      } else if (this.title === '加入黑名单') {
+        if (this.isOwner) {
+          return item.userId != this.currentGroupInfo.ownerId
+        } else if (this.isManager) {
+          return item.userId != this.currentGroupInfo.ownerId && !item.isManager
+        }
       }
-      // return this.groupStore.currentGroupMemberInfo;
     },
-    groupMemberAstrictClose(){
+    groupMemberAstrictClose () {
       console.log('关闭');
     }
   },
   computed: {
+    isManager () {
+      let userId = this.userStore.userInfo.id;
+      let m = this.currentGroupMember.find((m) => m.userId == userId);
+      return m && m.isManager;
+    },
+    isOwner () {
+      return this.currentGroupInfo.ownerId == this.userStore.userInfo.id
+    },
     currentGroupMember () {
-      return this.groupStore.currentGroupMember.filter(member => !member.quit);
+      if (this.title === '加入黑名单') {
+        const blacklistIds = new Set(this.groupBlacklist.map(item => item.userId));
+        return this.groupStore.currentGroupMember.filter(member => {
+          return !member.quit && !blacklistIds.has(member.userId);
+        });
+      } else {
+        return this.groupStore.currentGroupMember.filter(member => !member.quit);
+      }
     },
     currentGroupInfo () {
       return this.groupStore.groupInfo;
@@ -292,6 +356,13 @@ export default {
               color: #999;
               margin-top: 5px;
               font-size: 10px;
+            }
+          }
+          .li-checkbox {
+            position: absolute;
+            right: 10px;
+            ::v-deep .el-checkbox__label {
+              display: none;
             }
           }
           .li-radio {

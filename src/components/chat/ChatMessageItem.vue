@@ -19,7 +19,8 @@
          :class="[{ 'message-mine': mine },selected ? 'mr' : '', isGroup ? '' : 'left-set']">
       <div class="avatar"
            v-if="isGroup"
-           @click="openMamberInfo(msgInfo)" @contextmenu.prevent="showHeadMessageMenu($event)">
+           @click="openMamberInfo(msgInfo)"
+           @contextmenu.prevent="showHeadMessageMenu($event,msgInfo)">
         <head-image :size="38"
                     :url="headImage"></head-image>
       </div>
@@ -189,6 +190,10 @@ export default {
     downloadFile
   },
   props: {
+    isSelected: {
+      type: Boolean,
+      default: false
+    },
     mode: {
       type: Number,
       default: 1
@@ -275,17 +280,27 @@ export default {
       this.audio.play();
       this.onPlayVoice = 'RUNNING';
     },
-    showHeadMessageMenu(e){
+    showHeadMessageMenu (e, msgInfo) {
+      let memberInfo = this.groupMemberInfo(msgInfo.sendId)
       let menuItems = [
         {
-          key: 'MUTE',
-          name: '禁言'
-        },
-        {
-          key:'AT',
+          key: 'AT',
           name: '@一下'
         }
       ]
+      if (this.isOwner || this.isManager) {
+        if (memberInfo.isMuted) {
+          menuItems.push({
+            key: 'MUTE',
+            name: '解除禁言'
+          })
+        } else {
+          menuItems.push({
+            key: 'MUTE',
+            name: '禁言'
+          })
+        }
+      }
       this.$refs.rightMenu.open(e, menuItems);
     },
     showMessageMenu (e) {
@@ -399,6 +414,9 @@ export default {
         this.innerActive = false;
         this.$emit('cleared');
       }, 800);
+    },
+    groupMemberInfo (id) {
+      return this.groupStore.currentGroupMember.find(m => m.userId == id)
     }
   },
   computed: {
@@ -428,14 +446,13 @@ export default {
       const type = this.msgInfo.type;
       return this.$msgType.isNormal(type) || this.$msgType.isAction(type)
     },
-    isOwner () {
-      let userId = this.userStore.userInfo.id;
-      return this.group && userId == this.group.ownerId
-    },
     isManager () {
       let userId = this.userStore.userInfo.id;
       let m = this.groupMembers.find((m) => m.userId == userId);
       return m && m.isManager;
+    },
+    isOwner () {
+      return this.groupStore.groupInfo.ownerId == this.userStore.userInfo.id
     },
     htmlText () {
       let text;
@@ -454,6 +471,11 @@ export default {
       if (newVal !== this.lastTrigger) {
         this.lastTrigger = newVal; // 标记本次触发值
         this.activateHighlight();
+      }
+    },
+    isSelected (newVal) {
+      if (newVal === false) {
+        this.checked = false
       }
     }
   },
