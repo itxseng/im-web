@@ -55,7 +55,7 @@
         </el-radio-group>
         <br />
         <el-checkbox v-model="groupFrom.interimPerm"
-                     style="margin-bottom: 7px;">体禁止私聊</el-checkbox>
+                     style="margin-bottom: 7px;">禁止私聊</el-checkbox>
         <el-checkbox v-model="groupFrom.isMuted">全体禁言</el-checkbox>
         <p>@全体成员</p>
         <el-checkbox v-model="groupFrom.managerCanAtAll">管理员</el-checkbox>

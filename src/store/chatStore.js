@@ -114,8 +114,6 @@ export default defineStore('chatStore', {
         }
       }
       chats.splice(insertIndex, 0, chat);
-      console.log('chats', chats);
-
       this.saveToStorage();
     },
     setActiveChat (idx, type) {
@@ -505,20 +503,28 @@ export default defineStore('chatStore', {
     deleteMessage (msgInfo, chatInfo) {
       console.log('deleteMessage', msgInfo, chatInfo);
       let chat = this.findChat(chatInfo);
-      for (let idx in chat.messages) {
-        // 已经发送成功的，根据id删除
-        if (chat.messages[idx].id && chat.messages[idx].id == msgInfo.id) {
-          chat.messages.splice(idx, 1);
-          break;
+      if (!chat) return;
+
+      const deleteSingle = (msg) => {
+        for (let idx in chat.messages) {
+          if (
+            (chat.messages[idx].id && chat.messages[idx].id == msg.id) ||
+            (chat.messages[idx].tmpId && chat.messages[idx].tmpId == msg.tmpId)
+          ) {
+            chat.messages.splice(idx, 1);
+            break;
+          }
         }
-        // 正在发送中的消息可能没有id，只有临时id
-        if (chat.messages[idx].tmpId && chat.messages[idx].tmpId == msgInfo.tmpId) {
-          chat.messages.splice(idx, 1);
-          break;
-        }
+      };
+
+      if (Array.isArray(msgInfo)) {
+        msgInfo.forEach(msg => deleteSingle(msg));
+      } else {
+        deleteSingle(msgInfo);
       }
+
       chat.stored = false;
-      this.saveToStorage()
+      this.saveToStorage();
     },
     remoteDeletionMessage (msgInfo, chatInfo) {
       let chat = this.findChat(chatInfo);
@@ -605,7 +611,7 @@ export default defineStore('chatStore', {
       if (chat && (chat.headImage != group.headImageThumb ||
         chat.showName != group.showGroupName)) {
         // 更新会话中的群名称和头像
-        chat.headImage = group.headImageThumb;
+        chat.headImage = group.headImage;
         chat.showName = group.showGroupName;
         chat.stored = false;
         this.saveToStorage()

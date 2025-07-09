@@ -54,7 +54,29 @@
             <span @click="showMemberList">添加群成员</span>
           </div>
           <ul class="content-member-container">
-            <li></li>
+            <template v-if="memberList.length">
+              <li v-for="(item,index) in memberList"
+                  :key="index">
+                <div class="li-img">
+                  <img :src="item.headImage"
+                       alt="">
+                </div>
+                <div class="li-text">
+                  <p class="name">{{item.showNickName}}</p>
+                  <i class="el-icon-delete"
+                     v-if="item.userId !== currentGroupInfo.ownerId || item.userId !== currentGroupInfo.ownerId && !item.canAddAdmin"
+                     @click.stop="deleteMember(item)"></i>
+                  <div>
+                    <p class="time"
+                       v-if="item.userId === currentGroupInfo.ownerId">群主</p>
+                    <p class="time"
+                       v-else>管理员</p>
+                  </div>
+                </div>
+              </li>
+            </template>
+            <li v-else
+                class="list-tip">暂无群成员数据</li>
           </ul>
         </div>
       </div>
@@ -95,22 +117,41 @@ export default {
         isSendVideo: true, //是否可以发送视频
         isSendFile: true, //是否可以发送文件
         limitExpirationTime: 1 //限制到期时间
-      }
+      },
+      astrictMemberData: {
+        type: 2, //1群  2成员
+        groupId: 1,
+        userId: null,
+        isMuted: false, //是否开启全体禁言
+        isSendImage: true, //是否可以发送图片
+        isSendVideo: true, //是否可以发送视频
+        isSendFile: true, //是否可以发送文件
+        limitExpirationTime: 1 //限制到期时间
+      },
+      memberList: []
     }
   },
   methods: {
-
+    getMemberList () {
+      this.$http({
+        url: `/group/restriction/${this.currentGroupInfo.id}`,
+        method: 'GET'
+      }).then(data => {
+        this.memberList = data
+      })
+    },
     showMemberList () {
       this.$refs.addGroupPersonnelRef.open();
     },
     open () {
       this.setAstrictData();
+      this.getMemberList()
       this.dialogModal = true;
     },
     // 取消按钮
     onClose () {
       this.dialogModal = false;
-      this.$emit('close');
+      // this.$emit('close');
     },
     onSave () {
       this.$http({
@@ -118,7 +159,7 @@ export default {
         method: 'PUT',
         data: this.astrictData
       }).then(() => {
-        this.$message.success('转让成功')
+        this.$message.success('操作成功')
         this.updateGroupData()
       })
     },
@@ -173,6 +214,26 @@ export default {
           }
           break;
       }
+    },
+    deleteMember (item) {
+      console.log(item);
+      this.astrictMemberData = {
+        type: 2, //1群  2成员
+        groupId: this.currentGroupInfo.id,
+        userId: item.userId,
+        isMuted: false, //是否开启全体禁言
+        isSendImage: true, //是否可以发送图片
+        isSendVideo: true, //是否可以发送视频
+        isSendFile: true, //是否可以发送文件
+      }
+       this.$http({
+        url: '/group/modifySpeakPerm',
+        method: 'PUT',
+        data: this.astrictMemberData
+      }).then(() => {
+        this.getMemberList()
+        this.$message.success('操作成功')
+      })
     }
   },
   computed: {
@@ -282,15 +343,83 @@ export default {
           margin-right: 5px;
           cursor: pointer;
         }
-        // .content-member-container {
-
-        // }
+        .content-member-container {
+          width: 100%;
+          min-height: 50px;
+          max-height: 500px;
+          overflow-y: auto;
+          li {
+            width: 100%;
+            height: 50px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            cursor: pointer;
+            &:hover {
+              background-color: #ededed;
+            }
+            .li-img {
+              width: 40px;
+              height: 40px;
+              border-radius: 20px;
+              overflow: hidden;
+              img {
+                width: 100%;
+                height: 100%;
+              }
+            }
+            .li-text {
+              width: calc(100% - 50px);
+              height: 50px;
+              border-bottom: 1px solid #f5f5f5;
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              justify-content: center;
+              position: relative;
+              p {
+                margin: 0px;
+                font-size: 12px;
+              }
+              .name {
+                font-weight: 700;
+              }
+              .time {
+                color: #999;
+                margin-top: 5px;
+                font-size: 10px;
+              }
+              .el-icon-delete {
+                color: #999;
+                font-size: 20px;
+                position: absolute;
+                right: 10px;
+                &:hover {
+                  color: red;
+                }
+              }
+            }
+            .is-online {
+              color: #47ad47 !important;
+            }
+          }
+        }
       }
     }
     .bottom {
       width: 100%;
       display: flex;
       justify-content: flex-end;
+    }
+    .list-tip {
+      display: flex;
+      align-items: center;
+      justify-content: center !important;
+      &:hover {
+        background-color: #fff !important;
+      }
     }
     ::v-deep .el-dialog__header {
       padding: 0px !important;

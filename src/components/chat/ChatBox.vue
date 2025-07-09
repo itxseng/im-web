@@ -10,10 +10,16 @@
           <div class="header-selected-btn">
             <el-button type="primary"
                        size="medium"
-                       @click="messageTranspond">转发</el-button>
+                       @click="messageTranspond">
+              <span>转发</span>
+              <span v-show="selectMessageList.length > 0"> {{ selectMessageList.length }}</span>
+            </el-button>
             <el-button type="primary"
                        size="medium"
-                       @click="delMessage">删除</el-button>
+                       @click="delMessage">
+              <span>删除</span>
+              <span v-show="selectMessageList.length > 0"> {{ selectMessageList.length }}</span>
+            </el-button>
           </div>
           <el-button type="text"
                      @click="onCloseSelected"
@@ -69,6 +75,7 @@
                      :key="showMinIdx + idx">
                   <chat-message-item v-if="idx >= showMinIdx && (showMaxIdx < 0 || idx < showMaxIdx)"
                                      :id="msgInfo.id"
+                                     :isSelected="isSelected"
                                      @call="onCall(msgInfo.type)"
                                      :active="activeMessageIdx === idx"
                                      :activeSignal="activeMessageIdx === idx ? activeSignal : 0"
@@ -89,11 +96,12 @@
                                      @select="onSelectMessage"
                                      @quote="onQuoteMessage"
                                      @edit="onEditMessage"
-                                    @top="onTopMessage"
-                                    @at="onAtMessage"
-                                    @selectMessage="selectMessage"
-                                    @copy="copyMessage"
-                                    @transmit="transmitMessage"
+                                     @top="onTopMessage"
+                                     @at="onAtMessage"
+                                     @selectMessage="selectMessage"
+                                     @copy="copyMessage"
+                                     @mute="groupMemberMute"
+                                     @transmit="transmitMessage"
                                      @complaint="complaintOpen()"
                                      @cleared="cleared"
                                      :selected="isSelected">
@@ -102,7 +110,8 @@
               </div>
             </el-main>
             <el-footer :height="quoteMessage || editMessage ? '276px' : '220px'"
-                       class="im-chat-footer">
+                       :class="['im-chat-footer',groupIsBlack ? 'isBackground' :'']"
+                       :style="userPermission">
               <div v-if="quoteMessage || editMessage"
                    class="quote-message">
                 <div class="quote-message-icon"
@@ -124,9 +133,11 @@
                   <div title="表情"
                        class="icon iconfont emoji-bar-icon"
                        ref="emotion"
+                       :style="imagePermission"
                        @click.stop="showEmotionBox()">
                   </div>
-                  <div title="发送图片">
+                  <div title="发送图片"
+                       :style="imagePermission">
                     <file-upload :action="'/image/upload'"
                                  :maxSize="10 * 1024 * 1024"
                                  :fileTypes="['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif']"
@@ -136,7 +147,8 @@
                       <div class="icon iconfont image-bar-icon"></div>
                     </file-upload>
                   </div>
-                  <div title="发送视频">
+                  <div title="发送视频"
+                       :style="videoPermission">
                     <file-upload :action="'/video/upload'"
                                  :maxSize="50 * 1024 * 1024"
                                  :fileTypes="['video/mp4', 'video/ogg', 'video/webm']"
@@ -146,7 +158,8 @@
                       <div class="icon iconfont video-bar-icon"></div>
                     </file-upload>
                   </div>
-                  <div title="发送文件">
+                  <div title="发送文件"
+                       :style="filePermission">
                     <file-upload ref="fileUpload"
                                  :action="'/file/upload'"
                                  :maxSize="configStore.sendSize.file"
@@ -180,27 +193,31 @@
                        class="meeting-bar-icon"
                        @click="playRtcGroupJoin()">
                   </div>
-                  <div title="回执消息"
+                  <!-- <div title="回执消息"
                        v-show="isGroup"
                        class="icon iconfont icon-receipt"
                        :class="isReceipt ? 'chat-tool-active' : ''"
                        @click="onSwitchReceipt">
-                  </div>
+                  </div> -->
                 </div>
                 <div title="聊天记录"
                      class="record-bar-icon"
                      @click="showHistoryBox()"></div>
               </div>
-              <div class="send-content-area"
+              <div :class="['send-content-area']"
                    :style="{height: quoteMessage ? '241px' : '185px'}">
                 <ChatInput :group="group"
+                           :chat="chat"
                            ref="chatInputEditor"
                            :group-members="groupMembers"
-                           @submit="sendMessage" />
+                           @submit="sendMessage"
+                           v-if="!groupIsBlack" />
+                <div v-else>你已被管理员拉黑</div>
                 <div class="send-btn-area">
                   <el-button type="primary"
                              icon="el-icon-s-promotion"
-                             @click="notifySend()">发送</el-button>
+                             @click="notifySend()"
+                             v-show="!groupIsBlack">发送</el-button>
                 </div>
               </div>
             </el-footer>
@@ -305,7 +322,8 @@
               @returnInfo="returnInfo" />
       <div class="delete-all"
            v-if="dialogType === '远程删除'">
-        <p>你确定要删除此条消息？</p>
+        <p v-if="selectMessageList && selectMessageList.length > 0">你确定要删除这{{selectMessageList.length}}条消息？</p>
+        <p v-else>你确定要删除此条消息？</p>
         <el-checkbox v-model="deleteAllCheck">同时为对方删除</el-checkbox>
         <div class="btn-box">
           <el-button @click="deleteAllClose">取消</el-button>
@@ -658,7 +676,7 @@ export default {
       this.sendMessageRequest(msgInfo).then((m) => {
         msgInfo.loadStatus = 'ok';
         msgInfo.id = m.id;
-        this.isReceipt = false;
+        this.isReceipt = true;
         this.chatStore.insertMessage(msgInfo, file.chat);
       })
     },
@@ -721,7 +739,7 @@ export default {
         msgInfo.loadStatus = 'ok';
         msgInfo.isDownload = true;
         msgInfo.id = m.id
-        this.isReceipt = false;
+        this.isReceipt = true;
         this.refreshPlaceHolder();
         console.log('sendMessageRequest', msgInfo);
 
@@ -780,7 +798,7 @@ export default {
       this.sendMessageRequest(msgInfo).then((m) => {
         msgInfo.loadStatus = 'ok';
         msgInfo.id = m.id;
-        this.isReceipt = false;
+        this.isReceipt = true;
         this.chatStore.insertMessage(msgInfo, file.chat);
       })
     },
@@ -826,11 +844,6 @@ export default {
     },
     onClickMore (e, type) {
       if (type == 1) {
-        // this.showSide = !this.showSide;
-        // if (this.showSide) {
-        //   // 刷新一下群和成员信息
-        //   this.loadGroup(this.group.id);
-        // }
         let groupMenuList = [
           {
             key: 'MESSAGEINFORM',
@@ -841,10 +854,6 @@ export default {
             key: 'ADDMEMBER',
             name: '添加成员'
           },
-          // {
-          //   key: 'SAVEGROUP',
-          //   name: '保存到群组'
-          // },
           {
             key: 'ISUNREAD',
             name: '标为未读'
@@ -862,7 +871,7 @@ export default {
             name: '投诉'
           }
         ]
-        if (this.groupInfo.ownerId == this.mine.id) {
+        if (this.isOwner) {
           groupMenuList.forEach(item => {
             if (item.key === 'DELETEGROUP') {
               item.name = '解散群组'
@@ -870,7 +879,7 @@ export default {
             }
           })
         }
-        if (this.groupInfo.ownerId == this.mine.id || this.isManager) {
+        if (this.isOwner || this.isManager) {
           groupMenuList.splice(1, 0, {
             key: 'MANAGEGROUP',
             name: '管理群组',
@@ -891,7 +900,7 @@ export default {
             }
           })
         }
-        if (this.groupInfo.dissolve || this.groupInfo.quit) {
+        if (this.groupInfo.dissolve || this.groupInfo.quit || this.groupIsBlack) {
           const list = [
             {
               key: 'DELETE',
@@ -1062,7 +1071,7 @@ export default {
         this.scrollToBottom();
         // 关闭录音窗口
         this.showRecord = false;
-        this.isReceipt = false;
+        this.isReceipt = true;
         this.refreshPlaceHolder();
       })
     },
@@ -1084,7 +1093,8 @@ export default {
         this.showBannedTip();
         return;
       }
-      let sendText = this.isReceipt ? "【回执消息】" : "";
+      // let sendText = this.isReceipt ? "【回执消息】" : "";
+      let sendText = "";
       for (let i = 0; i < fullList.length; i++) {
         let msg = fullList[i];
         switch (msg.type) {
@@ -1153,7 +1163,7 @@ export default {
         }).finally(() => {
           // 解除锁定
           this.scrollToBottom();
-          this.isReceipt = false;
+          this.isReceipt = true;
           this.quoteMessage = null;
           this.editMessage = null;
           resolve();
@@ -1190,9 +1200,11 @@ export default {
       this.dialogShow = false
     },
     deleteAllSbm () {
+      console.log(this.selectMessageList.map(item => item.id));
+
       let data = {
         peerId: this.chat.targetId,
-        ids: [this.deleteAllObj.id],
+        ids: this.isSelected ? this.selectMessageList.map(item => item.id) : [this.deleteAllObj.id],
         action: 'DELETE',
         deleteBoth: this.deleteAllCheck
       }
@@ -1201,9 +1213,12 @@ export default {
         method: 'post',
         data
       }).then(() => {
-        this.chatStore.deleteMessage(this.deleteAllObj, this.chat);
-        this.deleteAllObj = {}
+        let msgInfo = this.isSelected ? this.selectMessageList : this.deleteAllObj
+        this.chatStore.deleteMessage(msgInfo, this.chat);
+        this.isSelected = false
         this.deleteAllCheck = false
+        this.deleteAllObj = {}
+        this.selectMessageList = []
         this.$message.success('删除成功');
         this.deleteAllClose()
       });
@@ -1226,6 +1241,27 @@ export default {
       } else {
         this.$message?.error('复制失败');
       }
+    },
+    // 禁言
+    groupMemberMute (msgInfo) {
+      let memberInfo = this.groupStore.currentGroupMember.find(m => m.userId == msgInfo.sendId)
+      let data = {
+        groupId: msgInfo.groupId,
+        userIds: [memberInfo.userId]
+      }
+      if (memberInfo.isMuted) {
+        data.isMuted = false
+      } else {
+        data.isMuted = true
+      }
+      this.$http({
+        url: '/group/members/muted',
+        method: 'PUT',
+        data
+      }).then(() => {
+        this.$message.success('修改成功')
+        this.loadGroup(msgInfo.groupId)
+      })
     },
     // 转发消息
     transmitMessage (msgInfo) {
@@ -1264,8 +1300,9 @@ export default {
     },
     // 取消选择
     onCloseSelected () {
-      this.selectMessageList = []
       this.isSelected = false;
+      this.selectMessageList = []
+      console.log(this.selectMessageList);
     },
     // 选择消息
     onSelectMessage (msgInfo) {
@@ -1288,7 +1325,7 @@ export default {
       else {
         this.selectMessageList = this.selectMessageList.filter(msg => msg.id !== item.id);
       }
-      console.log('当前已选消息列表:', this.selectMessageList);
+      console.log('当前已选消息列表:', msgInfo);
     },
     // 转发按钮
     messageTranspond () {
@@ -1332,10 +1369,10 @@ export default {
     delMessage () {
       if (!this.selectMessageList.length) {
         return
+      } else {
+        this.dialogType = '远程删除'
+        this.dialogShow = true
       }
-      const msgs = this.selectMessageList
-      console.log(msgs);
-
     },
     // 撤回消息
     onRecallMessage (msgInfo) {
@@ -1552,10 +1589,12 @@ export default {
       this.$refs.chatInputEditor.insertAtMember(member)
     },
     resetEditor () {
-      this.$nextTick(() => {
-        this.$refs.chatInputEditor.clear();
-        this.$refs.chatInputEditor.focus();
-      });
+      if (!this.groupIsBlack) {
+        this.$nextTick(() => {
+          this.$refs.chatInputEditor.clear();
+          this.$refs.chatInputEditor.focus();
+        });
+      }
     },
     scrollToBottom () {
       this.resetShowMessages();
@@ -1566,7 +1605,7 @@ export default {
     },
     refreshPlaceHolder () {
       if (this.isReceipt) {
-        this.placeholder = "【回执消息】"
+        this.placeholder = ""
       } else if (this.$refs.editBox && this.$refs.editBox.innerHTML) {
         this.placeholder = ""
       } else {
@@ -1623,6 +1662,124 @@ export default {
     }
   },
   computed: {
+    userPermission () {
+      if (this.isGroup) {
+        if (!this.groupIsBlack) {
+          return {
+            pointerEvents: 'auto',
+            // cursor: 'pointer',
+          };
+        } else {
+          return {
+            pointerEvents: 'none',
+            cursor: 'not-allowed',
+            opacity: 0.6, // 可选：视觉反馈
+          };
+        }
+      } else {
+        return {
+          pointerEvents: 'auto',
+          // cursor: 'pointer',
+        };
+      }
+    },
+    groupIsBlack () {
+      if (this.isGroup) {
+        return this.group?.groupMember?.isBlack
+      } else {
+        return false
+      }
+    },
+    groupIsMuted () {
+      return !this.group.isMuted
+    },
+    groupIsSendImage () {
+      return this.group.isSendImage
+    },
+    groupIsSendVideo () {
+      return this.group.isSendVideo
+    },
+    groupIsSendFile () {
+      return this.group.isSendFile
+    },
+    groupMemberIsMuted () {
+      return !this.group?.groupMember?.isMuted
+    },
+    groupMemberIsSendImage () {
+      return this.group?.groupMember?.isSendImage
+    },
+    groupMemberIsSendVideo () {
+      return this.group?.groupMember?.isSendVideo
+    },
+    groupMemberIsSendFile () {
+      return this.group?.groupMember?.isSendFile
+    },
+    // 表情权限
+    imagePermission () {
+      if (this.isGroup) {
+        if (this.groupIsMuted && this.groupMemberIsMuted && this.groupIsSendImage && this.groupMemberIsSendImage && !this.groupIsBlack) {
+          return {
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+          };
+        } else {
+          return {
+            pointerEvents: 'none',
+            cursor: 'not-allowed',
+            opacity: 0.6, // 可选：视觉反馈
+          };
+        }
+      } else {
+        return {
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        };
+      }
+    },
+    // 文件权限
+    filePermission () {
+      if (this.isGroup) {
+        if (this.groupIsMuted && this.groupMemberIsMuted && this.groupIsSendFile && this.groupMemberIsSendFile && !this.groupIsBlack) {
+          return {
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+          };
+        } else {
+          return {
+            pointerEvents: 'none',
+            cursor: 'not-allowed',
+            opacity: 0.6, // 可选：视觉反馈
+          };
+        }
+      } else {
+        return {
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        };
+      }
+    },
+    // 视频权限
+    videoPermission () {
+      if (this.isGroup) {
+        if (this.groupIsMuted && this.groupMemberIsMuted && this.groupIsSendVideo && this.groupMemberIsSendVideo && !this.groupIsBlack) {
+          return {
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+          };
+        } else {
+          return {
+            pointerEvents: 'none',
+            cursor: 'not-allowed',
+            opacity: 0.6, // 可选：视觉反馈
+          };
+        }
+      } else {
+        return {
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        };
+      }
+    },
     mine () {
       return this.userStore.userInfo;
     },
@@ -1633,8 +1790,6 @@ export default {
       return this.userInfo.online ? '在线' : this.$date.toTimeText(this.userInfo.lastLoginTime, true, true);
     },
     isFriend () {
-      console.log('isFriend', this.friendStore.isFriend(this.userInfo.id));
-
       return this.friendStore.isFriend(this.userInfo.id);
     },
     group () {
@@ -1678,6 +1833,9 @@ export default {
       let m = this.groupMembers.find((m) => m.userId == this.mine.id);
       return m && m.isManager;
     },
+    isOwner () {
+      return this.groupStore.groupInfo.ownerId == this.mine.id
+    }
   },
   watch: {
     updateNotifyExpireTs: {
@@ -1713,7 +1871,7 @@ export default {
         this.readedMessage();
         this.resetShowMessages();
         this.resetEditor();
-        this.isReceipt = false;
+        this.isReceipt = true;
         this.quoteMessage = null;
         this.editMessage = null;
         this.refreshPlaceHolder();
@@ -2109,6 +2267,9 @@ export default {
     width: 100%;
     display: flex;
     justify-content: flex-end;
+  }
+  .isBackground {
+    background-color: #30313324 !important;
   }
   .content-box {
     width: 100%;

@@ -1,25 +1,19 @@
 <template>
   <div class="friend-request"
        ref="reqTabs">
-    <div class="title">新的朋友</div>
+    <div class="title">{{ title }}</div>
     <div class="content">
       <div class="content-btn">
-        <div :class="['content-btn-receive',isShow ? 'active' : '']"
-             @click="cut('receive')">群通知({{recvRequests.length}})</div>
+        <div :class="['content-btn-application',isShow ? 'active' : '']"
+             @click="cut('application')">群通知({{applicationCount}})</div>
         <div :class="['content-btn-send',isShow ? '' : 'active']"
-             @click="cut('send')">群公告({{groupAnnouncement.length}})</div>
+             @click="cut('announcement')">群公告({{groupAnnouncement.length}})</div>
       </div>
       <div class="content-container">
-        <div class="content-container-receive"
-             v-if="isShow && recvRequests.length">
-          <div class="list"
-               v-for="request in recvRequests"
-               :key="request.id">
-            <friend-request-item :request="request"
-                                 class="list-item"
-                                 type="receive"
-                                 v-if="request && request.status !== 4"></friend-request-item>
-          </div>
+        <div class="content-container-application"
+             v-if="isShow && applicationCount > 0">
+          <GroupApplication :myApplicationList="myApplicationList"
+                            @updateMyApplicationList="updateMyApplicationList" />
         </div>
         <div class="content-container-announcement"
              v-else-if="!isShow && groupAnnouncement.length">
@@ -53,36 +47,52 @@
 <script>
 import NoDataTip from '../common/NoDataTip.vue'
 import FriendRequestItem from './FriendRequestItem.vue'
-
+import GroupApplication from '../group/GroupApplication.vue'
 export default {
   name: "friendRequest",
-  components: { NoDataTip, FriendRequestItem },
+  components: { NoDataTip, FriendRequestItem, GroupApplication },
   data () {
     return {
       tabPaneHeight: 600,
-      isShow: true
+      isShow: true,
+      title: '群通知',
+      myApplicationList: []
     }
   },
   methods: {
     cut (type) {
       switch (type) {
-        case 'receive':
+        case 'application':
+          this.title = '群通知'
           this.isShow = true
           break;
-        case 'send':
+        case 'announcement':
+          this.title = '群公告'
           this.isShow = false
           break;
       }
+    },
+    myApplication () {
+      this.$http({
+        url: '/group/join/my_requests',
+        method: 'GET'
+      }).then((res) => {
+        this.myApplicationList = res
+      })
+    },
+    updateMyApplicationList () {
+      this.myApplication()
     }
   },
   computed: {
+    applicationCount () {
+      return this.myApplicationList.length + this.groupsApplication.length
+    },
+    groupsApplication () {
+      return this.groupStore.groupsApplication;
+    },
     mine () {
       return this.userStore.userInfo;
-    },
-    recvRequests () {
-      let requests = this.friendStore.requests;
-      console.log(this.friendStore.requests);
-      return requests.filter((req) => req.recvId == this.mine.id);
     },
     sendRequests () {
       let requests = this.friendStore.requests;
@@ -91,9 +101,6 @@ export default {
     tabPaneStyle () {
       return `height:${this.tabPaneHeight}px`;
     },
-    // groupInformList(){
-    //   return this.groupStore.groups;
-    // }
     groupAnnouncement () {
       let arr = []
       this.groupStore.groups.forEach(group => {
@@ -106,6 +113,7 @@ export default {
   },
   mounted () {
     this.tabPaneHeight = this.$refs.reqTabs.offsetHeight - 80;
+    this.myApplication()
   }
 }
 </script>
@@ -167,10 +175,10 @@ export default {
     .content-container {
       width: 100%;
       height: calc(100% - 50px);
-      margin-top: 20px;
+      margin-top: 10px;
       box-sizing: border-box;
-      .content-container-receive,
-      .content-container-send {
+      .content-container-application,
+      .content-container-announcement {
         .list:last-child {
           .list-item:last-child {
             margin-bottom: 0px;
@@ -186,62 +194,62 @@ export default {
       flex-direction: column;
       box-sizing: border-box;
       border-radius: 4px;
-      .list {
-        width: 100%;
-        margin-bottom: 10px;
-        background: white;
-        padding: 15px 20px;
-        box-sizing: border-box;
-        border-radius: 4px;
-      }
-      .content-container-announcement-info {
-        width: 70%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        .content-container-announcement-info-img {
-          width: 40px;
-          height: 40px;
-          // background: #ccc;
+    }
+    .list {
+      width: 100%;
+      margin-bottom: 10px;
+      background: white;
+      padding: 15px 20px;
+      box-sizing: border-box;
+      border-radius: 4px;
+    }
+    .content-container-announcement-info {
+      width: 70%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      .content-container-announcement-info-img {
+        width: 40px;
+        height: 40px;
+        // background: #ccc;
+        border-radius: 20px;
+        img {
+          width: 100%;
+          height: 100%;
           border-radius: 20px;
-          img {
-            width: 100%;
-            height: 100%;
-            border-radius: 20px;
-          }
-        }
-        .content-container-announcement-info-text {
-          width: calc(100% - 50px);
-          height: 40px;
-          margin-left: 10px;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: center;
-          p {
-            font-size: 12px;
-            margin: 0px;
-          }
         }
       }
-      .content-container-announcement-text {
-        width: 100%;
-        color: #999;
-        font-size: 12px;
-        text-align: left;
-      }
-      .content-container-announcement-else {
-        width: 100%;
-        font-size: 12px;
-        color: #999;
+      .content-container-announcement-info-text {
+        width: calc(100% - 50px);
+        height: 40px;
+        margin-left: 10px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        .content-container-announcement-else-more {
-          cursor: pointer;
-          color: #3066ec;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        p {
+          font-size: 12px;
+          margin: 0px;
         }
+      }
+    }
+    .content-container-announcement-text {
+      width: 100%;
+      color: #999;
+      font-size: 12px;
+      text-align: left;
+    }
+    .content-container-announcement-else {
+      width: 100%;
+      font-size: 12px;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .content-container-announcement-else-more {
+        cursor: pointer;
+        color: #3066ec;
       }
     }
     .content-container-announcement:last-child {

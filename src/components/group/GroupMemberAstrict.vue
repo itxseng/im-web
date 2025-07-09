@@ -22,29 +22,33 @@
       <div class="content">
         <ul>
           <li>
-            <span>禁言</span>
-            <el-switch :value="message"
+            <span>发送消息</span>
+            <el-switch :value="!astrictData.isMuted"
+                       @change="changeisSwitch('isMuted')"
                        active-color="#99B6FF"
                        inactive-color="#B1B1B1">
             </el-switch>
           </li>
           <li>
             <span>发送视频</span>
-            <el-switch :value="message"
+            <el-switch v-model="astrictData.isSendVideo"
+                       @change="changeisSwitch('isSendVideo')"
                        active-color="#99B6FF"
                        inactive-color="#B1B1B1">
             </el-switch>
           </li>
           <li>
             <span>发送图片</span>
-            <el-switch :value="message"
+            <el-switch v-model="astrictData.isSendImage"
+                       @change="changeisSwitch('isSendImage')"
                        active-color="#99B6FF"
                        inactive-color="#B1B1B1">
             </el-switch>
           </li>
           <li>
             <span>发送文件</span>
-            <el-switch :value="message"
+            <el-switch v-model="astrictData.isSendFile"
+                       @change="changeisSwitch('isSendFile')"
                        active-color="#99B6FF"
                        inactive-color="#B1B1B1">
             </el-switch>
@@ -55,7 +59,8 @@
         <div class="astrict-time-title">
           <span>限制持续时间</span>
         </div>
-        <el-radio-group v-model="radio">
+        <el-radio-group v-model="astrictData.limitType"
+                        @input="changeRadio">
           <el-radio :label="1">永久</el-radio>
           <el-radio :label="2">持续1天</el-radio>
           <el-radio :label="3">持续1周</el-radio>
@@ -84,14 +89,82 @@ export default {
       dialogModal: false,
       message: false,
       memberInfo: {},
-      radio: 1
+      astrictData: {
+        type: 1, //1群  2成员
+        groupId: 1,
+        userId: null,
+        isMuted: false, //是否开启全体禁言
+        isSendImage: true, //是否可以发送图片
+        isSendVideo: true, //是否可以发送视频
+        isSendFile: true, //是否可以发送文件
+        limitExpirationTime: 1, //限制到期时间
+        limitType: 1
+      }
     }
   },
   methods: {
     open (value) {
       console.log(value);
+
       this.memberInfo = value;
+      this.setAstrictData(value);
       this.dialogModal = true;
+    },
+    setAstrictData (value) {
+      this.astrictData = {
+        type: 2, //1群  2成员
+        groupId: this.currentGroupInfo.id,
+        userId: value.userId,
+        isMuted: value.isMuted, //是否开启全体禁言
+        isSendImage: value.isSendImage, //是否可以发送图片
+        isSendVideo: value.isSendVideo, //是否可以发送视频
+        isSendFile: value.isSendFile, //是否可以发送文件
+        limitExpirationTime: value.limitExpirationTime ? value.limitExpirationTime : 100 * 365 * 24 * 60 * 60 * 1000, //限制到期时间
+        limitType: value.limitType
+      }
+      console.log('astrictData', this.astrictData);
+    },
+    changeisSwitch (type) {
+      switch (type) {
+        case 'isMuted':
+          this.astrictData.isMuted = !this.astrictData.isMuted;
+          if (this.astrictData.isMuted) {
+            this.astrictData.isSendImage = false
+            this.astrictData.isSendVideo = false
+            this.astrictData.isSendFile = false
+          }
+          break;
+        case 'isSendImage':
+          if (this.astrictData.isMuted) {
+            this.astrictData.isSendImage = false
+          }
+          break;
+        case 'isSendVideo':
+          if (this.astrictData.isMuted) {
+            this.astrictData.isSendVideo = false
+          }
+          break;
+        case 'isSendFile':
+          if (this.astrictData.isMuted) {
+            this.astrictData.isSendFile = false
+          }
+          break;
+      }
+    },
+    changeRadio (value) {
+      switch (value) {
+        case 1:
+          this.astrictData.limitExpirationTime = 100 * 365 * 24 * 60 * 60 * 1000
+          break;
+        case 2:
+          this.astrictData.limitExpirationTime = 1 * 24 * 60 * 60 * 1000
+          break;
+        case 3:
+          this.astrictData.limitExpirationTime = 7 * 24 * 60 * 60 * 1000
+          break;
+        case 4:
+          this.astrictData.limitExpirationTime = 30 * 24 * 60 * 60 * 1000
+      }
     },
     // 取消按钮
     onClose () {
@@ -99,18 +172,14 @@ export default {
       this.$emit('groupMemberAstrictClose');
     },
     onSave () {
-      // let data = {
-      //   groupId: this.currentGroupInfo.id,
-      //   userId: this.radio
-      // }
-      // this.$http({
-      //   url: '/group/transfer',
-      //   method: 'PUT',
-      //   data
-      // }).then(() => {
-      //   this.$message.success('转让成功')
-      //   this.updateGroupData()
-      // })
+      this.$http({
+        url: '/group/modifySpeakPerm',
+        method: 'PUT',
+        data: this.astrictData
+      }).then(() => {
+        this.$message.success('操作成功')
+        this.updateGroupData()
+      })
     },
     updateGroupData () {
       this.dialogModal = false;
@@ -120,7 +189,10 @@ export default {
   computed: {
     showTime () {
       return this.memberInfo.online ? '在线' : this.$date.toTimeText(this.memberInfo.lastOnlineTime, true, true);
-    }
+    },
+    currentGroupInfo () {
+      return this.groupStore.groupInfo;
+    },
   }
 }
 </script>

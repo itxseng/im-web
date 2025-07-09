@@ -48,6 +48,10 @@
           </div>
         </div>
       </div>
+      <div class="message-text"
+           v-if="content.type == $enums.MESSAGE_TYPE.AUDIO"
+           v-html="aideoHtml">
+      </div>
     </div>
   </div>
 </template>
@@ -117,6 +121,10 @@ export default {
       let text = this.$url.replaceURLWithHTMLLinks(this.content.content)
       let html = `${this.forwardTip}<div>${text}</div>`
       return this.$emo.transform(html, 'emoji-normal')
+    },
+    aideoHtml () {
+      let text = JSON.parse(this.content.content).duration
+      return `${this.forwardTip}<div>[语音] ${text}"</div>`
     }
   }
 }

@@ -1,4 +1,5 @@
 import http from '../api/httpRequest.js'
+import localForage from '../utils/electronForage.js';
 import { defineStore } from 'pinia';
 export default defineStore('groupStore', {
   state: () => {
@@ -7,10 +8,46 @@ export default defineStore('groupStore', {
       currentGroupMember: [],
       groupInfo: {},
       groupPermission: {},
-      
+      groupsApplication: []
     }
   },
   actions: {
+    getGroupsApplication () {
+      localForage.getItem('groupsApplication').then(application => {
+        if (Array.isArray(application) && application.length) {
+          this.setGroupsApplication(application);
+        }
+      });
+    },
+
+    setGroupsApplication (application) {
+      const existing = Array.isArray(this.groupsApplication) ? this.groupsApplication : [];
+      const combined = [...existing, ...application];
+
+      // 按 id 去重
+      const map = new Map();
+      combined.forEach(item => {
+        if (item && item.id != null) {
+          map.set(item.id, item); // 后者会覆盖前者
+        }
+      });
+
+      this.groupsApplication = Array.from(map.values());
+
+      localForage.setItem('groupsApplication', this.groupsApplication);
+    },
+    // 更新群申请
+    updateGroupsApplication (application, status) {
+      const index = this.groupsApplication.findIndex(item => item.id === application.id);
+      if (index !== -1) {
+        const updatedApplication = {
+          ...this.groupsApplication[index],
+          status
+        };
+        this.groupsApplication.splice(index, 1, updatedApplication);
+        localForage.setItem('groupsApplication', this.groupsApplication);
+      }
+    },
     setGroupPermission (permission) {
       this.groupPermission = permission;
     },
@@ -43,7 +80,7 @@ export default defineStore('groupStore', {
     },
     updateTopMessage (id, topMessage) {
       console.log(id, topMessage);
-      
+
       let group = this.findGroup(id);
       if (!group) return;
 
@@ -83,6 +120,7 @@ export default defineStore('groupStore', {
           method: 'GET'
         }).then(groups => {
           this.setGroups(groups);
+          this.getGroupsApplication()
           resolve();
         }).catch((res) => {
           reject(res);
