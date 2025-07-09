@@ -1247,11 +1247,18 @@ export default {
         this.chatStore.insertMessage(m, chat)
       })
     },
+    // 批量发送转发消息，保证顺序
+    async sendForwards (chats, msgs) {
+      for (const chat of chats) {
+        for (const msgInfo of msgs) {
+          await this.sendForward(chat, msgInfo)
+        }
+      }
+    },
     // 转发消息
     transmitMessage (msgInfo) {
       this.$refs.chatSel.open(async chats => {
-        const tasks = chats.map(chat => this.sendForward(chat, msgInfo))
-        await Promise.all(tasks)
+        await this.sendForwards(chats, [msgInfo])
         this.$message.success('转发成功')
       })
     },
@@ -1294,13 +1301,7 @@ export default {
       }
       const msgs = this.selectMessageList
       this.$refs.chatSel.open(async chats => {
-        const tasks = []
-        chats.forEach(chat => {
-          msgs.forEach(msgInfo => {
-            tasks.push(this.sendForward(chat, msgInfo))
-          })
-        })
-        await Promise.all(tasks)
+        await this.sendForwards(chats, msgs)
         this.onCloseSelected()
         this.$message.success('转发成功')
       })
