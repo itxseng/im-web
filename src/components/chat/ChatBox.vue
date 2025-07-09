@@ -1226,36 +1226,34 @@ export default {
         this.$message?.error('复制失败');
       }
     },
+    // 发送转发消息
+    sendForward (chat, msgInfo) {
+      const message = {
+        content: JSON.stringify(msgInfo),
+        type: this.$enums.MESSAGE_TYPE.FORWARD
+      }
+      if (chat.type == 'GROUP') {
+        message.groupId = chat.targetId
+      } else {
+        message.recvId = chat.targetId
+      }
+      return this.$http({
+        url: `/message/${chat.type.toLowerCase()}/send`,
+        method: 'post',
+        data: message
+      }).then(m => {
+        m.selfSend = true
+        this.chatStore.openChat(chat)
+        this.chatStore.insertMessage(m, chat)
+      })
+    },
     // 转发消息
     transmitMessage (msgInfo) {
-      this.$refs.chatSel.open(chats => {
-        // 逐个会话发送消息
-        let idx = 0;
-        chats.forEach(chat => {
-          let message = {
-            content: JSON.stringify(msgInfo),
-            type: this.$enums.MESSAGE_TYPE.FORWARD
-          }
-
-          if (chat.type == 'GROUP') {
-            message.groupId = chat.targetId
-          } else {
-            message.recvId = chat.targetId;
-          }
-          this.$http({
-            url: `/message/${chat.type.toLowerCase()}/send`,
-            method: 'post',
-            data: message
-          }).then((m) => {
-            m.selfSend = true;
-            this.chatStore.openChat(chat);
-            this.chatStore.insertMessage(m, chat);
-            if (++idx == chats.length) {
-              this.$message.success("转发成功")
-            }
-          })
-        })
-      });
+      this.$refs.chatSel.open(async chats => {
+        const tasks = chats.map(chat => this.sendForward(chat, msgInfo))
+        await Promise.all(tasks)
+        this.$message.success('转发成功')
+      })
     },
     complaintOpen () {
       this.dialogType = '投诉';
@@ -1295,36 +1293,16 @@ export default {
         return
       }
       const msgs = this.selectMessageList
-      this.$refs.chatSel.open(chats => {
-        // 需要发送的总次数 = 选择的会话数 * 消息数
-        let finish = 0
-        const total = chats.length * msgs.length
+      this.$refs.chatSel.open(async chats => {
+        const tasks = []
         chats.forEach(chat => {
           msgs.forEach(msgInfo => {
-            const message = {
-              content: JSON.stringify(msgInfo),
-              type: this.$enums.MESSAGE_TYPE.FORWARD
-            }
-            if (chat.type == 'GROUP') {
-              message.groupId = chat.targetId
-            } else {
-              message.recvId = chat.targetId
-            }
-            this.$http({
-              url: `/message/${chat.type.toLowerCase()}/send`,
-              method: 'post',
-              data: message
-            }).then((m) => {
-              m.selfSend = true
-              this.chatStore.openChat(chat)
-              this.chatStore.insertMessage(m, chat)
-              if (++finish === total) {
-                this.onCloseSelected()
-                this.$message.success('转发成功')
-              }
-            })
+            tasks.push(this.sendForward(chat, msgInfo))
           })
         })
+        await Promise.all(tasks)
+        this.onCloseSelected()
+        this.$message.success('转发成功')
       })
     },
     // 多选删除消息
