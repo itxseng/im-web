@@ -30,7 +30,8 @@ export default {
         url: `/jitsi/meet/auth/${this.groupInfo.id}`,
         method: 'GET'
       }).then(url => {
-        window.open(url)
+        const meetUrl = encodeURIComponent(url)
+        window.open(`/jitsi.html?url=${meetUrl}`)
       })
     },
   },
