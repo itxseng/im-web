@@ -118,6 +118,8 @@ export default {
       this.progressVisible = true;
       this.progressStatus = 'success';
       const requestId = this.isMegInfo.id || this.isMegInfo.tmpId;
+      console.log(this.isChat.targetId, this.isMegInfo.id);
+      
       this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
       window.electronAPI.downloadFile({ url: downloadUrl, filename, requestId });
     },

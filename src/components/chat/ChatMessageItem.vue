@@ -39,12 +39,15 @@
         </div>
         <div class="bottom"
              @contextmenu.prevent="showMessageMenu($event)">
-          <div ref="chatMsgBox">
-            <div class="box-message">
+          <div ref="chatMsgBox"
+               class="message-box">
+            <!-- ? 文本消息 -->
+            <div class="box-message"
+                 v-if="msgInfo.type == $enums.MESSAGE_TYPE.TEXT">
               <span class="message-text"
-                    v-if="msgInfo.type == $enums.MESSAGE_TYPE.TEXT"
                     v-html="htmlText"></span>
             </div>
+            <!-- ? 图片消息 -->
             <div class="message-image"
                  v-if="msgInfo.type == $enums.MESSAGE_TYPE.IMAGE">
               <div v-loading="loading"
@@ -60,6 +63,7 @@
                     @click="onSendFail"
                     class="send-fail el-icon-warning"></span>
             </div>
+            <!-- ? 视频消息 -->
             <div class="message-video"
                  v-if="msgInfo.type == $enums.MESSAGE_TYPE.VIDEO && contentData !== null">
               <video class="send-video"
@@ -72,6 +76,7 @@
                     @click="onSendFail"
                     class="send-fail el-icon-warning"></span>
             </div>
+            <!-- ? 文件消息 -->
             <div class="message-file"
                  v-if="msgInfo.type == $enums.MESSAGE_TYPE.FILE">
               <div class="file-box"
@@ -86,7 +91,7 @@
                     <p class="file-text-name">{{ contentData.name}}</p>
                     <div class="file-size">
                       <span>{{ fileSize }}</span>
-                      <span>{{filtrationTime(msgInfo.sendTime)}}</span>
+                      <!-- <span>{{filtrationTime(msgInfo.sendTime)}}</span> -->
                     </div>
                   </div>
                 </div>
@@ -96,32 +101,60 @@
                     @click="onSendFail"
                     class="send-fail el-icon-warning"></span>
             </div>
-          </div>
-          <div class="message-voice"
-               v-if="msgInfo.type == $enums.MESSAGE_TYPE.AUDIO"
-               @click="onPlayVoice()">
-            <audio controls
-                   :src="contentData.url.originUrl"></audio>
-          </div>
-          <ChatForwardMessage v-if="msgInfo.type == $enums.MESSAGE_TYPE.FORWARD && groupMembers"
-                              :cardInfo="msgInfo"
-                              :chat="chat"
-                              :groupMembers="groupMembers" />
-          <chat-user-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.USER_CARD"
-                          :cardInfo="contentData"></chat-user-card>
-          <chat-group-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.GROUP_CARD"
-                           :cardInfo="contentData"></chat-group-card>
-          <div class="chat-action message-text"
-               v-if="isAction">
-            <span v-if="msgInfo.type == $enums.MESSAGE_TYPE.ACT_RT_VOICE"
-                  title="重新呼叫"
-                  @click="$emit('call')"
-                  class="iconfont icon-chat-voice"></span>
-            <span v-if="msgInfo.type == $enums.MESSAGE_TYPE.ACT_RT_VIDEO"
-                  title="重新呼叫"
-                  @click="$emit('call')"
-                  class="iconfont icon-chat-video"></span>
-            <span>{{ msgInfo.content }}</span>
+            <!-- ? 语音消息 -->
+            <div class="message-voice"
+                 v-if="msgInfo.type == $enums.MESSAGE_TYPE.AUDIO"
+                 @click="onPlayVoice()">
+              <audio controls
+                     :src="contentData.url.originUrl"></audio>
+            </div>
+            <!-- ? 会议邀请 -->
+            <ChatConferenceCard v-if="msgInfo.type == $enums.MESSAGE_TYPE.CONFERENCE"
+                                :sendUserId="msgInfo.sendId" />
+            <!-- ? 转发消息 -->
+            <ChatForwardMessage v-if="msgInfo.type == $enums.MESSAGE_TYPE.FORWARD && groupMembers"
+                                :cardInfo="msgInfo"
+                                :chat="chat"
+                                :groupMembers="groupMembers" />
+            <!-- ? 群组操作 -->
+            <div class="chat-action message-text"
+                 v-if="isAction">
+              <span v-if="msgInfo.type == $enums.MESSAGE_TYPE.ACT_RT_VOICE"
+                    title="重新呼叫"
+                    @click="$emit('call')"
+                    class="iconfont icon-chat-voice"></span>
+              <span v-if="msgInfo.type == $enums.MESSAGE_TYPE.ACT_RT_VIDEO"
+                    title="重新呼叫"
+                    @click="$emit('call')"
+                    class="iconfont icon-chat-video"></span>
+              <span>{{ msgInfo.content }}</span>
+            </div>
+            <!-- ? 分享名片 -->
+            <chat-user-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.USER_CARD"
+                            :cardInfo="contentData"></chat-user-card>
+            <chat-group-card v-if="msgInfo.type == $enums.MESSAGE_TYPE.GROUP_CARD"
+                             :cardInfo="contentData"></chat-group-card>
+            <!-- ? 已读状态与时间 -->
+            <div class="message-status"
+                 v-if="!isAction"
+                 :style="isFile">
+              <div class="chat-readed"
+                   @click="onShowReadedBox"
+                   v-if="isGroup ? msgInfo.readedCount > 0 : msgInfo.status == $enums.MESSAGE_STATUS.READED">
+                <div class="chat-readed-text">
+                  {{ filtrationTime(msgInfo.sendTime) }} &nbsp;<span class="icon"
+                        v-show="msgInfo.selfSend"></span>
+                </div>
+              </div>
+              <div class="chat-unread"
+                   @click="onShowReadedBox"
+                   v-if="isGroup ? msgInfo.readedCount === 0  : msgInfo.status !== $enums.MESSAGE_STATUS.READED">
+                <div class="chat-unread-text">
+                  {{ filtrationTime(msgInfo.sendTime) }} &nbsp;<span class="icon"
+                        v-show="msgInfo.selfSend"></span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="quote-message"
                v-if="msgInfo.quoteMessage"
@@ -131,31 +164,14 @@
                                 :showName="quoteShowName"></chat-quote-message>
           </div>
           <!-- <div class="message-time">{{ filtrationTime(msgInfo.sendTime) }}</div> -->
-          <div class="message-status"
-               v-if="!isAction">
-            <div class="chat-readed"
-                 v-show="msgInfo.selfSend && !msgInfo.groupId
-							&& msgInfo.status == $enums.MESSAGE_STATUS.READED">
-              <div class="chat-readed-text">
-                {{ filtrationTime(msgInfo.sendTime) }} &nbsp;<span class="icon"></span>
-              </div>
+          <!-- <template v-if="isGroup && mine">
+            <div class="chat-receipt"
+                 v-if="msgInfo.receipt"
+                 @click="onShowReadedBox">
+              <span v-if="msgInfo.receiptOk">全体已读</span>
+              <span v-else>{{ msgInfo.readedCount }}人已读</span>
             </div>
-            <div class="chat-unread"
-                 v-show="msgInfo.selfSend && !msgInfo.groupId
-							&& msgInfo.status != $enums.MESSAGE_STATUS.READED">
-              <div class="chat-unread-text">
-                {{ filtrationTime(msgInfo.sendTime) }} &nbsp;<span class="icon"></span>
-              </div>
-            </div>
-          </div>
-          <div class="chat-receipt"
-               v-if="msgInfo.receipt"
-               @click="onShowReadedBox">
-            <span v-if="msgInfo.receiptOk"
-                  class="icon iconfont icon-ok"
-                  title="全体已读"></span>
-            <span v-else>{{ msgInfo.readedCount }}人已读</span>
-          </div>
+          </template> -->
         </div>
       </div>
     </div>
@@ -164,7 +180,8 @@
     <chat-group-readed ref="chatGroupReadedBox"
                        :msgInfo="msgInfo"
                        :group="group"
-                       :groupMembers="groupMembers"></chat-group-readed>
+                       :groupMembers="groupMembers"
+                       v-if="isGroup"></chat-group-readed>
   </div>
 </template>
 
@@ -176,6 +193,7 @@ import ChatQuoteMessage from "./ChatQuoteMessage.vue";
 import ChatUserCard from "./ChatUserCard.vue";
 import ChatGroupCard from "./ChatGroupCard.vue";
 import ChatForwardMessage from "./ChatForwardMessage.vue";
+import ChatConferenceCard from "./ChatConferenceCard.vue";
 import downloadFile from '@/components/common/downloadFile'
 export default {
   name: "messageItem",
@@ -187,7 +205,8 @@ export default {
     ChatUserCard,
     ChatGroupCard,
     ChatForwardMessage,
-    downloadFile
+    downloadFile,
+    ChatConferenceCard
   },
   props: {
     isSelected: {
@@ -383,8 +402,10 @@ export default {
       this.$emit(eventKey, this.msgInfo);
     },
     onShowReadedBox () {
-      let rect = this.$refs.chatMsgBox.getBoundingClientRect();
-      this.$refs.chatGroupReadedBox.open(rect);
+      if (this.isGroup && this.mine) {
+        let rect = this.$refs.chatMsgBox.getBoundingClientRect();
+        this.$refs.chatGroupReadedBox.open(rect);
+      }
     },
     isGroupOwner (userId) {
       return this.group.ownerId == userId;
@@ -405,7 +426,7 @@ export default {
       const minutes = date.getMinutes().toString().padStart(2, '0');
       const seconds = date.getSeconds().toString().padStart(2, '0');
 
-      return `${hours}:${minutes}:${seconds}`;
+      return `${hours}:${minutes}`;
     },
     activateHighlight () {
       this.innerActive = true;
@@ -420,6 +441,17 @@ export default {
     }
   },
   computed: {
+    isFile () {
+      if (this.msgInfo.type == this.$enums.MESSAGE_TYPE.FILE) {
+        return {
+          'position': 'absolute',
+          'bottom': '15px',
+          'right': '15px'
+        }
+      } else {
+        return {}
+      }
+    },
     contentData () {
       return JSON.parse(this.msgInfo.content)
     },
@@ -567,19 +599,34 @@ export default {
           display: inline-block;
           padding-right: 220px;
           margin-top: 2px;
-
+          .message-box {
+            min-width: 80px;
+            background-color: #fff;
+            border-radius: 10px;
+            position: relative;
+          }
+          .message-status {
+            position: absolute;
+            right: 1px;
+            bottom: 0px;
+            font-size: 12px !important;
+          }
+          .box-message {
+            padding-bottom: 10px;
+            border-radius: 10px;
+          }
           .message-text {
             display: inline-block;
             position: relative;
-            line-height: 26px;
-            padding: 6px 15px 6px 15px;
+            line-height: 20px;
+            padding: 8px;
             background: white;
             border-radius: 10px;
             font-size: var(--im-font-size);
             text-align: left;
             white-space: pre-wrap;
             word-break: break-all;
-
+            // padding-bottom: 10px;
             &:after {
               content: "";
               position: absolute;
@@ -633,7 +680,8 @@ export default {
             align-items: center;
             cursor: pointer;
             margin-bottom: 2px;
-
+            background: #ffffff !important;
+            border-radius: 10px;
             .file-box {
               width: 210px;
               display: flex;
@@ -643,6 +691,7 @@ export default {
               box-shadow: var(--im-box-shadow-light);
               border-radius: 4px;
               padding: 10px 15px;
+              // background: #3066ec !important;
               .file-info {
                 flex: 1;
                 height: 100%;
@@ -661,6 +710,7 @@ export default {
                   .file-text-name {
                     width: 100%;
                     margin: 0;
+                    color: #000;
                     overflow: hidden;
                     display: block;
                     white-space: nowrap;
@@ -684,7 +734,7 @@ export default {
                   justify-content: space-between;
                   align-items: center;
                   font-size: var(--im-font-size-smaller);
-                  color: var(--im-text-color-light);
+                  color: #000;
                   margin-top: 10px;
                 }
               }
@@ -692,7 +742,7 @@ export default {
               .file-icon {
                 width: 45px;
                 height: 45px;
-                background-color: #3065ec;
+                background-color: #3066ec;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -710,9 +760,14 @@ export default {
             }
           }
 
-          .message-voice audio {
-            height: 45px;
-            cursor: pointer;
+          .message-voice {
+            height: 60px;
+            background-color: #f1f3f4;
+            border-radius: 10px;
+            audio {
+              height: 45px;
+              cursor: pointer;
+            }
           }
 
           .chat-action {
@@ -732,33 +787,35 @@ export default {
             display: block;
             margin-top: 3px;
             cursor: pointer;
-            padding: 7px;
+            padding: 6px;
             border-radius: 4px;
             background-color: #cccccc69;
           }
 
           .message-status {
             display: block;
-
+            position: absolute;
+            bottom: 0px;
+            right: 1px;
             .chat-readed {
-              font-size: 13px;
-              color: #8c8c8c;
+              font-size: 12px;
+              color: #000000;
               display: flex;
               align-items: center;
               justify-content: flex-end;
+              line-height: 16px;
               .chat-readed-text {
-                width: 80px;
+                // width: 80px;
                 display: flex;
                 align-items: center;
                 justify-content: flex-end;
-                background-color: #0000001f;
+                // background-color: #0000001f;
                 border-radius: 3px;
-                padding: 3px 3px;
-                margin-top: 4px;
+                padding: 0px 3px 3px 3px;
               }
               .icon {
-                width: 20px;
-                height: 20px;
+                width: 15px;
+                height: 15px;
                 background: url("../../assets/chat/read-icon.png") no-repeat
                   center;
                 background-size: 100%;
@@ -766,23 +823,23 @@ export default {
             }
 
             .chat-unread {
-              font-size: 13px;
-              color: #8c8c8c;
+              font-size: 12px;
+              color: #000000;
               display: flex;
               align-items: center;
               justify-content: flex-end;
               .chat-unread-text {
-                width: 80px;
+                // width: 80px;
                 display: flex;
                 align-items: center;
                 justify-content: flex-end;
-                background-color: #0000001f;
+                // background-color: #0000001f;
                 border-radius: 3px;
-                padding: 3px 3px;
-                margin-top: 4px;
+                padding: 0px 3px 3px 3px;
+                // margin-top: 4px;
                 .icon {
-                  width: 20px;
-                  height: 20px;
+                  width: 15px;
+                  height: 15px;
                   background: url("../../assets/chat/unread-icon.png") no-repeat
                     center;
                   background-size: 100%;
@@ -831,11 +888,29 @@ export default {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            .message-text {
+            .message-box {
+              min-width: 80px;
+              border-radius: 10px;
+              position: relative;
+            }
+            .box-message {
+              padding-bottom: 10px;
               background-color: #3066ec;
-              margin-left: 10px;
-              color: #fff;
-
+              border-radius: 10px;
+            }
+            .chat-readed {
+              color: #fff !important;
+            }
+            .chat-unread {
+              color: #fff !important;
+            }
+            .message-text {
+              width: 100%;
+              box-sizing: border-box;
+              background-color: #3066ec;
+              line-height: 20px;
+              color: #fff !important;
+              text-align: left;
               &:after {
                 left: auto;
                 right: -7px;
@@ -854,7 +929,19 @@ export default {
             }
 
             .message-file {
+              background-color: #3066ec !important;
               flex-direction: row-reverse;
+            }
+            .download-file {
+              background-color: #fff !important;
+            }
+            .file-icon {
+              background-color: #fff !important;
+              color: #3066ec !important;
+            }
+            .file-size,
+            .file-text-name {
+              color: #fff !important;
             }
 
             .chat-action {

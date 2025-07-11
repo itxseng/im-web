@@ -10,7 +10,7 @@ let toTimeText = (timeStamp, simple, text) => {
     timeText = Math.floor(timeDiff / 60000) + '分钟前';
   } else if (timeDiff >= 3600000 && timeDiff < 86400000 && !isYestday(dateTime)) {
     //今日
-    timeText = formatDateTime(dateTime).substr(11, 5) + (text ? '之前在线' : '');
+    timeText = '今天' + formatDateTime(dateTime).substr(11, 5) + (text ? '之前在线' : '');
   } else if (isYestday(dateTime)) {
     //昨天
     timeText = '昨天' + formatDateTime(dateTime).substr(11, 5) + (text ? '之前在线' : '');

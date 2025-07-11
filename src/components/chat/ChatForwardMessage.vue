@@ -1,6 +1,5 @@
 <template>
-  <div class="chat-forward-message"
-       v-if="friendInfo">
+  <div class="chat-forward-message">
     <div>
       <div class="message-text"
            v-if="content.type == $enums.MESSAGE_TYPE.TEXT"
@@ -99,6 +98,15 @@ export default {
 
       return `${hours}:${minutes}:${seconds}`;
     },
+    isSentIt () {
+      if (this.userInfo.id == this.content.sendId) {
+        return this.userInfo
+      } else if (this.isFriend) {
+        return this.friendInfo
+      } else if (!this.isFriend) {
+        return { nickName: this.groupMemberInfo.showNickName, headImage: this.groupMemberInfo.headImage }
+      }
+    },
   },
   computed: {
     contentData () {
@@ -110,11 +118,17 @@ export default {
     userInfo () {
       return this.userStore.userInfo;
     },
+    isFriend () {
+      return this.friendStore.isFriend(this.content.sendId);
+    },
     friendInfo () {
-      return this.friendStore.findFriend(this.content.sendId) ? this.friendStore.findFriend(this.content.sendId) : this.groupMembers.find((f) => f.userId == this.content.sendId);
+      return this.friendStore.findFriend(this.content.sendId)
+    },
+    groupMemberInfo () {
+      return this.groupMembers.find((f) => f.userId == this.content.sendId);
     },
     forwardTip () {
-      let html = `<div style="display: flex;justify-content: flex-start;align-items: center;">转发自用户<img style="width: 30px;height: 30px;border-radius: 15px;margin:0 3px;" src="${this.friendInfo.headImage}" />${this.friendInfo.showNickName}</div>`
+      let html = `<div style="display: flex;justify-content: flex-start;align-items: center;">转发自用户<img style="width: 30px;height: 30px;border-radius: 15px;margin:0 3px;" src="${this.isSentIt().headImage}" />${this.isSentIt().nickName}</div>`
       return html
     },
     htmlText () {
@@ -153,7 +167,7 @@ export default {
     display: flex;
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 10px;
+    padding: 10px 2px 2px 2px;
     .message-image-tip {
       padding-left: 5px;
     }
@@ -175,7 +189,7 @@ export default {
     display: flex;
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 10px;
+    padding: 10px 10px 17px 10px;
     .send-video {
       min-width: 200px;
       max-width: 400px;
@@ -187,17 +201,20 @@ export default {
     }
   }
   .message-file {
-    background-color: #3066ec;
+    background-color: #3066ec !important;
     border-radius: 10px;
     display: flex;
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 10px;
+    padding: 10px 10px 15px 10px;
     .message-image-tip {
       padding-left: 5px;
     }
     .file-box {
-      background-color: white;
+      box-shadow: inset 0 0px 15px rgb(0 0 0 / 13%) !important;
+    }
+    .download-file {
+      color: #3066ec !important;
     }
   }
   .left-bg {

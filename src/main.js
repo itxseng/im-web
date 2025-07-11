@@ -17,6 +17,7 @@ import './utils/directive/dialogDrag';
 import useChatStore from './store/chatStore.js'
 import useFriendStore from './store/friendStore.js'
 import useGroupStore from './store/groupStore.js'
+import usePyqStore from './store/pyqStore.js'
 import useUserStore from './store/userStore.js'
 import useConfigStore from './store/configStore.js'
 Vue.use(ElementUI);
@@ -47,3 +48,4 @@ Vue.prototype.friendStore = useFriendStore();
 Vue.prototype.groupStore = useGroupStore();
 Vue.prototype.userStore = useUserStore();
 Vue.prototype.configStore = useConfigStore();
+Vue.prototype.pyqStore = usePyqStore();

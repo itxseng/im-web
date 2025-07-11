@@ -759,6 +759,7 @@ export default {
         this.showBannedTip();
         return;
       }
+      // this.onfileUploads(file.name)
       let url = URL.createObjectURL(file);
       let data = {
         name: file.name,
@@ -791,6 +792,16 @@ export default {
       file.msgInfo = msgInfo;
       file.chat = this.chat;
     },
+    // onfileUploads (fileName) {
+    //   this.$http({
+    //     url: "/getUploadToken",
+    //     method: 'post',
+    //     data: { fileName }
+    //   }).then(res => {
+    //     console.log(res);
+    //     // this.uploadPath = res
+    //   })
+    // },
     onVideoSuccess (data, file) {
       let msgInfo = JSON.parse(JSON.stringify(file.msgInfo));
       msgInfo.content = JSON.stringify(data);
@@ -997,7 +1008,16 @@ export default {
       this.$eventBus.$emit("openPrivateVideo", rtcInfo);
     },
     playRtcGroupJoin () {
-      this.$message.warning("开发中...");
+      this.$http({
+        url: '/message/group/send',
+        method: 'POST',
+        data: {
+          content: "CONFERENCE",
+          groupId: this.group.id,
+          type: 8
+        }
+      })
+      // this.$message.warning("开发中...");
     },
     onGroupVideo () {
       // 检查是否被封禁
@@ -1266,39 +1286,33 @@ export default {
     // 转发消息
     transmitMessage (msgInfo) {
       this.$refs.chatSel.open(chats => {
-        this.sendForwardMessages([msgInfo], chats)
-          .then(() => {
-            this.$message.success('转发成功')
-          })
-      });
-    },
-    // 多消息转发公共方法
-    sendForwardMessages (msgs, chats) {
-      const requests = []
-      chats.forEach(chat => {
-        msgs.forEach(msgInfo => {
-          const message = {
+        // 逐个会话发送消息
+        let idx = 0;
+        chats.forEach(chat => {
+          let message = {
             content: JSON.stringify(msgInfo),
             type: this.$enums.MESSAGE_TYPE.FORWARD
           }
+
           if (chat.type == 'GROUP') {
             message.groupId = chat.targetId
           } else {
-            message.recvId = chat.targetId
+            message.recvId = chat.targetId;
           }
-          const req = this.$http({
+          this.$http({
             url: `/message/${chat.type.toLowerCase()}/send`,
             method: 'post',
             data: message
-          }).then(m => {
-            m.selfSend = true
-            this.chatStore.openChat(chat)
-            this.chatStore.insertMessage(m, chat)
+          }).then((m) => {
+            m.selfSend = true;
+            this.chatStore.openChat(chat);
+            this.chatStore.insertMessage(m, chat);
+            if (++idx == chats.length) {
+              this.$message.success("转发成功")
+            }
           })
-          requests.push(req)
         })
-      })
-      return Promise.all(requests)
+      });
     },
     complaintOpen () {
       this.dialogType = '投诉';
@@ -1334,19 +1348,55 @@ export default {
       console.log('当前已选消息列表:', msgInfo);
     },
     // 转发按钮
-    messageTranspond () {
-      if (!this.selectMessageList.length) {
-        return
-      }
-      const msgs = this.selectMessageList
-      this.$refs.chatSel.open(chats => {
-        this.sendForwardMessages(msgs, chats)
-          .then(() => {
-            this.onCloseSelected()
-            this.$message.success('转发成功')
-          })
+    async messageTranspond () {
+      if (!this.selectMessageList.length) return
+
+      // 复制并按 sendTime 升序排序
+      const msgs = [...this.selectMessageList].sort((a, b) => a.sendTime - b.sendTime)
+
+      this.$refs.chatSel.open(async (chats) => {
+        const total = chats.length * msgs.length
+        let finish = 0
+
+        for (const chat of chats) {
+          for (const msgInfo of msgs) {
+            const message = {
+              content: JSON.stringify(msgInfo),
+              type: this.$enums.MESSAGE_TYPE.FORWARD
+            }
+
+            if (chat.type === 'GROUP') {
+              message.groupId = chat.targetId
+            } else {
+              message.recvId = chat.targetId
+            }
+
+            try {
+              const m = await this.$http({
+                url: `/message/${chat.type.toLowerCase()}/send`,
+                method: 'post',
+                data: message
+              })
+
+              m.selfSend = true
+              this.chatStore.openChat(chat)
+              this.chatStore.insertMessage(m, chat)
+              finish++
+
+              if (finish === total) {
+                this.onCloseSelected()
+                this.$message.success('转发成功')
+              }
+            } catch (err) {
+              console.error('转发失败', err)
+              this.$message.error('消息转发失败')
+              return // 如果一个失败就中止全部
+            }
+          }
+        }
       })
-    },
+    }
+    ,
     // 多选删除消息
     delMessage () {
       if (!this.selectMessageList.length) {
