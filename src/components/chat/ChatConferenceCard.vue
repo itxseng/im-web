@@ -31,7 +31,12 @@ export default {
         method: 'GET'
       }).then(url => {
         const meetUrl = encodeURIComponent(url)
-        window.open(`/jitsi.html?url=${meetUrl}`)
+        const width = Math.floor(window.screen.availWidth * 0.8)
+        const height = Math.floor(window.screen.availHeight * 0.8)
+        const left = Math.floor((window.screen.availWidth - width) / 2)
+        const top = Math.floor((window.screen.availHeight - height) / 2)
+        const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes`
+        window.open(`/jitsi.html?url=${meetUrl}`, '_blank', features)
       })
     },
   },
