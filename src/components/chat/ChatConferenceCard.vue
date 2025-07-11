@@ -35,7 +35,7 @@ export default {
         const height = Math.floor(window.screen.availHeight * 0.8)
         const left = Math.floor((window.screen.availWidth - width) / 2)
         const top = Math.floor((window.screen.availHeight - height) / 2)
-        const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes`
+        const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,menubar=no,location=no,status=no,toolbar=no`
         window.open(`/jitsi.html?url=${meetUrl}`, '_blank', features)
       })
     },
