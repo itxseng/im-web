@@ -33,9 +33,10 @@
         <div class="file-box">
           <div class="file-info">
             <div class="file-icon">
-              <!-- 使用转发消息本身，但内容需解包为文件数据 -->
-              <downloadFile :msgInfo="forwardFileMsg"
-                            :chat="chat" />
+              <!-- 传入原始转发消息，由 downloadFile 识别 isForward -->
+              <downloadFile :msgInfo="cardInfo"
+                            :chat="chat"
+                            :isForward="true" />
             </div>
             <div class="file-text">
               <p class="file-text-name">{{ JSON.parse(content.content).name}}</p>
@@ -126,11 +127,6 @@ export default {
     },
     groupMemberInfo () {
       return this.groupMembers.find((f) => f.userId == this.content.sendId);
-    },
-    // 将转发消息转换为文件消息格式，保持下载逻辑一致
-    forwardFileMsg () {
-      const inner = JSON.parse(this.cardInfo.content);
-      return { ...this.cardInfo, content: inner.content };
     },
     forwardTip () {
       let html = `<div style="display: flex;justify-content: flex-start;align-items: center;">转发自用户<img style="width: 30px;height: 30px;border-radius: 15px;margin:0 3px;" src="${this.isSentIt().headImage}" />${this.isSentIt().nickName}</div>`

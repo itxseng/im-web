@@ -27,6 +27,7 @@ export default {
   props: {
     msgInfo: { type: Object, default: () => ({}) },
     chat: { type: Object, default: () => ({}) },
+    isForward: { type: Boolean, default: false },
     bg: {
       type: String,
       default: ''
@@ -49,7 +50,15 @@ export default {
     };
   },
   computed: {
-    contentData () { return JSON.parse(this.msgInfo.content) },
+    contentData () {
+      if (this.isForward) {
+        try {
+          const forward = JSON.parse(this.msgInfo.content || '{}');
+          return JSON.parse(forward.content || '{}');
+        } catch (e) { return {}; }
+      }
+      return JSON.parse(this.msgInfo.content);
+    },
     isChat () { return this.chat },
     // isMegInfo () { return this.msgInfo },
     isMegInfo: {
@@ -80,8 +89,15 @@ export default {
           this.progressVisible = false;
           this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, true);
           // 更新本地路径
-          const data = { ...this.contentData, localPath: filePath };
-          this.msgInfo.content = JSON.stringify(data);
+          if (this.isForward) {
+            const forward = JSON.parse(this.msgInfo.content || '{}');
+            const data = { ...JSON.parse(forward.content || '{}'), localPath: filePath };
+            forward.content = JSON.stringify(data);
+            this.msgInfo.content = JSON.stringify(forward);
+          } else {
+            const data = { ...this.contentData, localPath: filePath };
+            this.msgInfo.content = JSON.stringify(data);
+          }
           this.chatStore.updateMessage(this.msgInfo, this.chat);
           console.log('下载完成：', filePath);
         }
@@ -136,8 +152,15 @@ export default {
         this.chatStore.setDownload(this.isChat.targetId, this.isMegInfo.id, false);
 
         // 更新 msgInfo.content 中的 localPath 字段
-        const newContent = { ...this.contentData, localPath: null };
-        this.msgInfo.content = JSON.stringify(newContent);
+        if (this.isForward) {
+          const forward = JSON.parse(this.msgInfo.content || '{}');
+          const newContent = { ...JSON.parse(forward.content || '{}'), localPath: null };
+          forward.content = JSON.stringify(newContent);
+          this.msgInfo.content = JSON.stringify(forward);
+        } else {
+          const newContent = { ...this.contentData, localPath: null };
+          this.msgInfo.content = JSON.stringify(newContent);
+        }
         this.chatStore.updateMessage(this.msgInfo, this.chat);
 
         // 调用 fallback：根据文件名去 Downloads 目录找
