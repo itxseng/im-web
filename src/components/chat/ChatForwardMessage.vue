@@ -33,9 +33,10 @@
         <div class="file-box">
           <div class="file-info">
             <div class="file-icon">
-              <downloadFile :msgInfo="content"
+              <!-- 传入原始转发消息，由 downloadFile 识别 isForward -->
+              <downloadFile :msgInfo="cardInfo"
                             :chat="chat"
-                            :id="content.id" />
+                            :isForward="true" />
             </div>
             <div class="file-text">
               <p class="file-text-name">{{ JSON.parse(content.content).name}}</p>
