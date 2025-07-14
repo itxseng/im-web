@@ -33,9 +33,9 @@
         <div class="file-box">
           <div class="file-info">
             <div class="file-icon">
-              <downloadFile :msgInfo="content"
-                            :chat="chat"
-                            :id="content.id" />
+              <!-- 使用转发消息本身作为 msgInfo，保持与文件消息一致的下载状态逻辑 -->
+              <downloadFile :msgInfo="cardInfo"
+                            :chat="chat" />
             </div>
             <div class="file-text">
               <p class="file-text-name">{{ JSON.parse(content.content).name}}</p>
