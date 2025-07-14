@@ -104,8 +104,16 @@ export default {
         return this.userInfo
       } else if (this.isFriend) {
         return this.friendInfo
-      } else if (!this.isFriend) {
-        return { nickName: this.groupMemberInfo.showNickName, headImage: this.groupMemberInfo.headImage }
+      } else if (this.groupMemberInfo) {
+        return {
+          nickName: this.groupMemberInfo.showNickName,
+          headImage: this.groupMemberInfo.headImage
+        }
+      } else {
+        return {
+          nickName: this.content.sendNickName || '',
+          headImage: ''
+        }
       }
     },
   },
