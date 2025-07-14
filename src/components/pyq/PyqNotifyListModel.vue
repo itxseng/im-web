@@ -8,21 +8,22 @@
     <div class="group-add">
       <div class="title">
         <p>{{ title }}</p>
+        <i class="el-icon-delete" @click="deleteNotify"></i>
       </div>
       <div class="content">
         <ul>
-          <!-- <li v-for="(item,index) in notifyList" :key="index">
-          </li>
-          <li v-if="notifyListNum>0">
-            <el-button @click="openNotify">查看全部</el-button>
-          </li> -->
+          <template v-if="notifyList && notifyList.length > 0">
+            <li v-for="(item,index) in notifyList"
+                :key="index">
+            </li>
+          </template>
+          <div v-else
+               class="tip">暂无通知数据</div>
         </ul>
       </div>
       <div class="bottom">
         <el-button @click="onClose"
-                   type="text">取消</el-button>
-        <el-button @click="onSave"
-                   type="text">保存</el-button>
+                   type="text">关闭</el-button>
       </div>
     </div>
   </el-dialog>
@@ -53,8 +54,8 @@ export default {
       this.dialogModal = false;
       // this.$emit('close');
     },
-    onSave () {
-      console.log('666');
+    deleteNotify(){
+      this.$message.warning('开发中...')
     }
   },
   computed: {
@@ -78,6 +79,7 @@ export default {
       align-items: center;
       justify-content: space-between;
       box-sizing: border-box;
+      position: relative;
       p {
         width: 100%;
         height: 35px;
@@ -85,14 +87,20 @@ export default {
         font-size: 18px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         margin: 0px;
+      }
+      .el-icon-delete {
+        position: absolute;
+        right: 10px;
+        color: #999;
+        &:hover {
+          color: #658efe;
+        }
       }
     }
     .content {
       width: 100%;
-      min-height: 300px;
-      max-height: 600px;
       box-sizing: border-box;
       overflow-y: auto;
       display: flex;
@@ -102,6 +110,22 @@ export default {
       align-content: space-between;
       margin-top: 15px;
       margin-bottom: 5px;
+      ul {
+        width: 100%;
+        min-height: 300px;
+        max-height: 600px;
+        margin: 0px;
+        padding: 0px;
+      }
+      .tip {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #999;
+      }
     }
     .bottom {
       width: 100%;

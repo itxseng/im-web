@@ -6,7 +6,11 @@
          title="刷新"></i>
       <span>我的朋友圈</span>
       <!-- <i class="el-icon-camera-solid" @click="showPostPyqModel"></i> -->
-      <i class="el-icon-bell" @click="openNotify"></i>
+      <div class="header-title-notify"
+           @click="openNotify">
+        <i class="el-icon-bell"></i>
+        <span class="header-title-notify-num" v-if="notifyListNum.count">{{ notifyListNum.count }}</span>
+      </div>
     </div>
     <div class="content">
       <div class="content-box"
@@ -58,7 +62,12 @@
                     <el-image :src="value"
                               fit="contain"
                               lazy
-                              :preview-src-list="getImgOrVideoList(item.topic.location)"></el-image>
+                              :preview-src-list="getImgOrVideoList(item.topic.location)">
+                      <div slot="error"
+                           class="image-slot">
+                        <i class="el-icon-picture-outline"></i>
+                      </div>
+                    </el-image>
                   </div>
                 </div>
                 <!-- ? 视频展示 -->
@@ -166,7 +175,7 @@
     <RightMenu ref="rightMenu"
                @select="onSelectMenu" />
     <PyqNotifyListModel ref="notifyListRef"
-                        :title="'朋友圈通知'" />
+                        :title="'通知'" />
     <!-- <PostPyqModel ref="postPyqRef" :title="'发布朋友圈'"/> -->
   </div>
 </template>
@@ -420,11 +429,14 @@ export default {
       }
     },
     // 打开朋友圈通知
-    openNotify(){
+    openNotify () {
       this.$refs.notifyListRef.open()
     }
   },
   computed: {
+    notifyListNum () {
+      return this.pyqStore.notifyListNum
+    },
     notifyList () {
       return this.pyqStore.notifyList
     },
@@ -553,11 +565,31 @@ export default {
           color: #658efe;
         }
       }
-      .el-icon-bell,
-      .el-icon-camera-solid {
+      .header-title-notify {
+        width: 30px;
+        height: 30px;
         position: absolute;
         right: 20px;
+        display: flex;
         cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        .header-title-notify-num {
+          position: absolute;
+          background-color: #fd0200;
+          right: 2px;
+          top: 4px;
+          color: white;
+          border-radius: 50px;
+          padding: 1px 4px;
+          font-size: 9px;
+          line-height: 11px;
+          text-align: center;
+          white-space: nowrap;
+        }
+      }
+      .el-icon-bell,
+      .el-icon-camera-solid {
         font-weight: 700;
         &:hover {
           color: #658efe;

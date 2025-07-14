@@ -113,6 +113,8 @@ export default {
         content = "[语音] " + JSON.parse(value.content).duration + '"';
       } else if (value.type === this.$enums.MESSAGE_TYPE.TEXT) {
         content = this.$emo.transform(value.content, 'emoji-normal');
+      }else if (value.type === this.$enums.MESSAGE_TYPE.CONFERENCE) {
+        content = "[群会议]";
       }
       return content;
     },

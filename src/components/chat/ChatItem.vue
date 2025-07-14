@@ -181,7 +181,7 @@ export default {
     onSelectMenu (item) {
       console.log(item.key.toLowerCase());
       this.$emit(item.key.toLowerCase(), this.chat);
-      
+
       // if (item.key === 'HEIMINGDAN' || item.key === 'CHAKANGERENXINXI' || item.key === 'BIAOWEIWEIDU' || item.key === 'QINGCHU') {
       // } 
       // else {
@@ -220,6 +220,8 @@ export default {
         msg.type == this.$enums.MESSAGE_TYPE.RECALL ||
         msg.type == this.$enums.MESSAGE_TYPE.TIP_TEXT) {
         content = this.$emo.transform(msg.content, 'emoji-small');
+      } if (msg.type === this.$enums.MESSAGE_TYPE.CONFERENCE) {
+        content = "[群会议]";
       }
       return content;
     },

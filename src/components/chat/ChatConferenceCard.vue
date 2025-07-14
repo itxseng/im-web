@@ -1,10 +1,12 @@
 <template>
   <div class="chat-user-card"
        @click.stop="onShowUserInfo">
-    <div class="card-body">
-      <img :src="groupInfo.headImageThumb"
+    <div class="card-body"
+         v-if="groupInfo">
+      <img :src="groupInfo.headImageThumb ? groupInfo.headImageThumb : groupInfo.headImage"
            alt="">
-      <div class="nick-name">
+      <div class="nick-name"
+           v-if="sendMemberInfo">
         <span>{{ sendMemberInfo.showNickName }}</span>
         <span>邀请你加入会议</span>
       </div>
